@@ -332,6 +332,40 @@
       cursor: default;
     }
 
+    .task-card .time-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+    }
+
+    .task-card.is-now {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.15), 0 0 12px rgba(34, 197, 94, 0.08);
+    }
+
+    .task-card.is-past:not(.is-complete) {
+      opacity: 0.5;
+    }
+
+    .pre-cycle-msg {
+      text-align: center;
+      padding: 24px 16px;
+    }
+
+    .pre-cycle-msg h2 {
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+    }
+
+    .countdown-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 16px 0;
+    }
+
     .task-main {
       display: flex;
       flex-direction: column;
@@ -583,7 +617,13 @@
       </div>
 
       <section id="tab-today" class="tab-screen">
-        <div class="panel">
+        <div id="pre-cycle-panel" class="panel pre-cycle-msg hidden">
+          <h2 id="pre-cycle-title"></h2>
+          <div id="pre-cycle-countdown" class="countdown-val"></div>
+          <p id="pre-cycle-detail" class="muted"></p>
+        </div>
+
+        <div id="stats-panel" class="panel">
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-label">Week</div>
@@ -604,7 +644,7 @@
           </div>
         </div>
 
-        <div class="panel">
+        <div id="phase-panel" class="panel">
           <div class="phase-row">
             <h2>Today</h2>
             <div id="phase-badge" class="phase-badge">-</div>
@@ -613,7 +653,7 @@
 
         <div id="injection-alert" class="panel alert hidden"></div>
 
-        <div class="panel">
+        <div id="progress-panel" class="panel">
           <h2>Cycle Progress</h2>
           <div class="progress-track">
             <div id="cycle-progress" class="progress-bar"></div>
@@ -621,16 +661,15 @@
           <div id="cycle-progress-label" class="progress-label">-</div>
         </div>
 
-        <div class="panel">
+        <div id="schedule-panel" class="panel">
           <div class="section-head">
-            <h2>Current Checklist</h2>
-            <span id="current-block-label" class="phase-badge">-</span>
+            <h2>Today's Schedule</h2>
+            <span id="schedule-progress" class="muted"></span>
           </div>
-          <p id="current-block-subtitle" class="muted"></p>
-          <div id="current-task-list" class="task-list" style="margin-top: 12px;"></div>
+          <div id="schedule-task-list" class="task-list"></div>
         </div>
 
-        <div class="panel">
+        <div id="supps-panel" class="panel">
           <div class="section-head">
             <h2>Supplements</h2>
             <span id="supplement-count" class="muted"></span>
@@ -974,9 +1013,17 @@ with check (true);`;
       injectionAlert: document.getElementById('injection-alert'),
       cycleProgress: document.getElementById('cycle-progress'),
       cycleProgressLabel: document.getElementById('cycle-progress-label'),
-      currentBlockLabel: document.getElementById('current-block-label'),
-      currentBlockSubtitle: document.getElementById('current-block-subtitle'),
-      currentTaskList: document.getElementById('current-task-list'),
+      preCyclePanel: document.getElementById('pre-cycle-panel'),
+      preCycleTitle: document.getElementById('pre-cycle-title'),
+      preCycleCountdown: document.getElementById('pre-cycle-countdown'),
+      preCycleDetail: document.getElementById('pre-cycle-detail'),
+      statsPanel: document.getElementById('stats-panel'),
+      phasePanel: document.getElementById('phase-panel'),
+      progressPanel: document.getElementById('progress-panel'),
+      schedulePanel: document.getElementById('schedule-panel'),
+      scheduleProgress: document.getElementById('schedule-progress'),
+      scheduleTaskList: document.getElementById('schedule-task-list'),
+      suppsPanel: document.getElementById('supps-panel'),
       supplementList: document.getElementById('supplement-list'),
       supplementCount: document.getElementById('supplement-count'),
       energyGrid: document.getElementById('energy-grid'),
@@ -1154,107 +1201,56 @@ with check (true);`;
       return value === '' || value == null ? null : Number(value);
     }
 
-    function getCurrentPeriod(date = new Date()) {
-      const hour = date.getHours();
-      if (hour < 11) {
-        return { key: 'morning', label: 'Morning Block' };
-      }
-      if (hour < 17) {
-        return { key: 'midday', label: 'Midday Block' };
-      }
-      return { key: 'evening', label: 'Evening Block' };
-    }
+    function getDailySchedule(meta, date = new Date()) {
+      const dow = date.getDay();
+      const week = meta.week;
+      const isInjDay = [1, 4].includes(dow) && week <= 12;
+      const isHCGDay = week >= 13 && week <= 14 && (meta.cappedDay - 85) % 2 === 0;
+      const isWinstrol = week >= 1 && week <= 4;
+      const isPCT = week >= 15;
+      const workoutNames = { 1: 'Push', 2: 'Pull', 3: 'Legs', 4: 'Push', 5: 'Pull', 6: 'Legs' };
+      const todayWorkout = workoutNames[dow] || null;
 
-    function getDailyTasks(meta, date = new Date()) {
-      const currentPeriod = getCurrentPeriod(date);
-      const tasks = [
-        {
-          name: 'Log weight and vitals',
-          period: 'morning',
-          detail: 'Complete the daily log with weight, sleep, energy, water, and calories.',
-          mode: 'auto',
-          completed: Boolean(state.todayLog),
-        },
-        {
-          name: 'Hydrate first liter',
-          period: 'morning',
-          detail: 'Get at least 1L of water in early.',
-          mode: 'manual',
-          completed: state.todayTasks.get('Hydrate first liter') === true,
-        },
-        {
-          name: 'Take morning stack',
-          period: 'morning',
-          detail: 'Handle morning supplements and the first oral dose block.',
-          mode: 'manual',
-          completed: state.todayTasks.get('Take morning stack') === true,
-        },
-        {
-          name: 'Workout session',
-          period: 'midday',
-          detail: 'Log your training session once complete.',
-          mode: 'auto',
-          completed: state.todayWorkoutCount > 0,
-        },
-        {
-          name: 'Hit hydration target',
-          period: 'midday',
-          detail: 'Stay on pace for the day water target.',
-          mode: 'manual',
-          completed: state.todayTasks.get('Hit hydration target') === true,
-        },
-        {
-          name: 'Meal and calorie check',
-          period: 'midday',
-          detail: 'Make sure calories are trending where they should be.',
-          mode: 'manual',
-          completed: state.todayTasks.get('Meal and calorie check') === true,
-        },
-        {
-          name: 'Finish evening stack',
-          period: 'evening',
-          detail: 'Close out PM supplements and split doses.',
-          mode: 'manual',
-          completed: state.todayTasks.get('Finish evening stack') === true,
-        },
-        {
-          name: 'Review notes and recovery',
-          period: 'evening',
-          detail: 'Update notes, check recovery, and prep sleep.',
-          mode: 'manual',
-          completed: state.todayTasks.get('Review notes and recovery') === true,
-        },
-      ];
-
-      if ([1, 4].includes(date.getDay())) {
-        tasks.push({
-          name: 'Injection due',
-          period: currentPeriod.key === 'evening' ? 'midday' : currentPeriod.key,
-          detail: `Scheduled pin: Test Cyp 250mg + Mast E 200mg into ${getInjectionSite(date) || 'assigned site'}.`,
-          mode: 'auto',
-          completed: state.todayInjectionCount > 0,
-        });
+      const amSupps = ['NAC 600mg', 'Omega-3 2g'];
+      if (isWinstrol) amSupps.push('Winstrol 25mg', 'TUDCA 500mg', 'Taurine 1.5g', 'Glucosamine 1500mg', 'CoQ10 200mg');
+      if (week >= 5 && week <= 12) amSupps.push('CoQ10 200mg', 'Glucosamine 1500mg');
+      if (week >= 1 && week <= 12) amSupps.push('Aromasin 12.5mg');
+      if (week >= 13 && week <= 14 && (meta.cappedDay - 85) % 2 === 0) amSupps.push('Aromasin 12.5mg');
+      if (isPCT) {
+        amSupps.push(week <= 16 ? 'Nolvadex 20mg' : 'Nolvadex 10mg');
+        amSupps.push(week <= 16 ? 'Clomid 25mg' : 'Clomid 12.5mg');
       }
 
-      if (meta.week >= 1 && meta.week <= 4) {
-        tasks.push({
-          name: 'Split Winstrol dose',
-          period: currentPeriod.key === 'morning' ? 'morning' : 'evening',
-          detail: 'Take the scheduled split oral dose for weeks 1-4.',
-          mode: 'manual',
-          completed: state.todayTasks.get('Split Winstrol dose') === true,
-        });
+      const pmSupps = ['NAC 600mg', 'Omega-3 2g'];
+      if (isWinstrol) pmSupps.push('Winstrol 25mg', 'Taurine 1.5g');
+      if (isPCT) {
+        pmSupps.push(week <= 16 ? 'Nolvadex 20mg' : 'Nolvadex 10mg');
+        pmSupps.push(week <= 16 ? 'Clomid 25mg' : 'Clomid 12.5mg');
       }
 
-      if (meta.week >= 15 && meta.week <= 18) {
-        tasks.push({
-          name: 'PCT dose check',
-          period: currentPeriod.key,
-          detail: meta.week <= 16 ? 'Nolvadex 40mg + Clomid 50mg scheduled today.' : 'Nolvadex 20mg + Clomid 25mg scheduled today.',
-          mode: 'manual',
-          completed: state.todayTasks.get('PCT dose check') === true,
-        });
+      const tasks = [];
+      tasks.push({ time: '07:00', name: 'Wake up & weigh in', detail: 'Step on scale, log weight and how you feel', mode: 'auto', completed: Boolean(state.todayLog) });
+      tasks.push({ time: '07:30', name: 'Breakfast + AM supplements', detail: amSupps.join(', '), mode: 'manual', completed: state.todayTasks.get('Breakfast + AM supplements') === true });
+
+      if (isInjDay) {
+        const site = getInjectionSite(date) || 'assigned site';
+        tasks.push({ time: '08:00', name: 'Inject Test Cyp + Mast E', detail: '250mg Test Cyp + 200mg Mast E \u2192 ' + site, mode: 'auto', completed: state.todayInjectionCount > 0 });
       }
+      if (isHCGDay) {
+        tasks.push({ time: '08:00', name: 'HCG injection', detail: 'HCG 2500iu subcutaneous', mode: 'auto', completed: state.todayInjectionCount > 0 });
+      }
+
+      tasks.push({ time: '10:00', name: 'Hydration check', detail: '1L+ water by now, keep sipping', mode: 'manual', completed: state.todayTasks.get('Hydration check') === true });
+      tasks.push({ time: '12:30', name: 'Meal 2', detail: 'Lunch \u2013 hit your protein and calorie targets', mode: 'manual', completed: state.todayTasks.get('Meal 2') === true });
+
+      if (todayWorkout) {
+        tasks.push({ time: '15:30', name: 'Pre-workout meal', detail: 'Light carbs + protein 30\u201360 min before training', mode: 'manual', completed: state.todayTasks.get('Pre-workout meal') === true });
+        tasks.push({ time: '16:00', name: 'Workout \u2013 ' + todayWorkout, detail: 'Log session when done', mode: 'auto', completed: state.todayWorkoutCount > 0 });
+      }
+
+      tasks.push({ time: '18:00', name: 'Evening meal', detail: todayWorkout ? 'Post-workout: high protein, replenish glycogen' : 'Meal 3 \u2013 hit your targets', mode: 'manual', completed: state.todayTasks.get('Evening meal') === true });
+      tasks.push({ time: '20:00', name: 'Meal 4 + PM supplements', detail: pmSupps.join(', '), mode: 'manual', completed: state.todayTasks.get('Meal 4 + PM supplements') === true });
+      tasks.push({ time: '22:00', name: 'Review & wind down', detail: 'Update notes, prep for sleep \u2013 aim for 7-8 hrs', mode: 'manual', completed: state.todayTasks.get('Review & wind down') === true });
 
       return tasks;
     }
@@ -1328,54 +1324,111 @@ with check (true);`;
 
     function renderToday() {
       const meta = getCycleMeta();
-      const currentPeriod = getCurrentPeriod();
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      // Pre-cycle: cycle hasn't started yet
+      if (meta.rawDay < 1) {
+        const daysUntil = 1 - meta.rawDay;
+        els.preCyclePanel.classList.remove('hidden');
+        els.preCycleTitle.textContent = daysUntil === 1 ? 'Cycle starts tomorrow' : `Cycle starts in ${daysUntil} days`;
+        els.preCycleCountdown.textContent = daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days`;
+        els.preCycleDetail.textContent = `Your 18-week cycle begins on ${formatLongDate(parseDateInput(state.config.cycleStartDate))}. Open the tracker that morning to see your Day 1 schedule.`;
+        els.statsPanel.classList.add('hidden');
+        els.phasePanel.classList.add('hidden');
+        els.injectionAlert.classList.add('hidden');
+        els.injectionAlert.classList.remove('pulse');
+        els.progressPanel.classList.add('hidden');
+        els.schedulePanel.classList.add('hidden');
+        els.suppsPanel.classList.add('hidden');
+        return;
+      }
+
+      // Cycle active or complete — show everything
+      els.preCyclePanel.classList.add('hidden');
+      els.statsPanel.classList.remove('hidden');
+      els.phasePanel.classList.remove('hidden');
+      els.progressPanel.classList.remove('hidden');
+      els.schedulePanel.classList.remove('hidden');
+      els.suppsPanel.classList.remove('hidden');
+
       els.statWeek.textContent = `W${meta.week}`;
-      els.statDay.textContent = meta.complete ? `126+` : String(meta.cappedDay);
+      els.statDay.textContent = meta.complete ? '126+' : String(meta.cappedDay);
       els.statRemaining.textContent = String(meta.daysRemaining);
       els.statWeight.textContent = state.latestWeightLog?.weight_kg != null ? `${state.latestWeightLog.weight_kg}kg` : '-';
       els.phaseBadge.textContent = getPhase(meta.cappedDay);
       els.cycleProgress.style.width = `${(meta.cappedDay / TOTAL_DAYS) * 100}%`;
       els.cycleProgressLabel.textContent = `Day ${meta.cappedDay} of ${TOTAL_DAYS}`;
 
+      // Injection alert (only weeks 1-12)
       const site = getInjectionSite();
-      if (site) {
+      if (site && meta.week <= 12) {
         els.injectionAlert.classList.remove('hidden');
         els.injectionAlert.classList.add('pulse');
-        els.injectionAlert.textContent = `INJECTION DAY — Test Cyp 250mg + Mast E 200mg → ${site}`;
+        els.injectionAlert.textContent = `INJECTION DAY \u2014 Test Cyp 250mg + Mast E 200mg \u2192 ${site}`;
       } else {
         els.injectionAlert.classList.add('hidden');
         els.injectionAlert.classList.remove('pulse');
       }
 
-      const taskList = getDailyTasks(meta);
-      const currentTasks = taskList.filter((task) => task.period === currentPeriod.key);
-      els.currentBlockLabel.textContent = currentPeriod.label;
-      els.currentBlockSubtitle.textContent = `${currentTasks.filter((task) => task.completed).length}/${currentTasks.length} tasks complete for this part of the day.`;
-      els.currentTaskList.innerHTML = '';
+      // Build schedule
+      const tasks = getDailySchedule(meta, now);
+      const doneCount = tasks.filter((t) => t.completed).length;
+      els.scheduleProgress.textContent = `${doneCount}/${tasks.length} done`;
+      els.scheduleTaskList.innerHTML = '';
 
-      currentTasks.forEach((task) => {
+      // Find the "now" task: first uncompleted task whose time has passed, or next upcoming
+      let nowIndex = -1;
+      for (let i = tasks.length - 1; i >= 0; i--) {
+        const [h, m] = tasks[i].time.split(':').map(Number);
+        if (h * 60 + m <= currentMinutes && !tasks[i].completed) { nowIndex = i; break; }
+      }
+      if (nowIndex === -1) {
+        for (let i = 0; i < tasks.length; i++) {
+          const [h, m] = tasks[i].time.split(':').map(Number);
+          if (h * 60 + m > currentMinutes && !tasks[i].completed) { nowIndex = i; break; }
+        }
+      }
+
+      tasks.forEach((task, idx) => {
+        const [h, m] = task.time.split(':').map(Number);
+        const taskMin = h * 60 + m;
+        const isPast = taskMin < currentMinutes;
+        const isNow = idx === nowIndex;
+
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = `task-card${task.completed ? ' is-complete' : ''}${task.mode === 'auto' ? ' is-auto' : ''}`;
+        let cls = 'task-card';
+        if (task.completed) cls += ' is-complete';
+        if (isNow) cls += ' is-now';
+        if (isPast && !task.completed) cls += ' is-past';
+        if (task.mode === 'auto') cls += ' is-auto';
+        button.className = cls;
+
+        const statusLabel = task.completed ? 'Done' : isNow ? 'Now' : isPast ? 'Missed' : 'Upcoming';
+
         button.innerHTML = `
           <span class="task-main">
+            <span class="time-badge">${task.time}</span>
             <span class="task-title">${task.name}</span>
             <span class="muted">${task.detail}</span>
             <span class="task-meta">
-              <span class="tag ${task.completed ? 'is-accent' : ''}">${task.completed ? 'Complete' : 'Open'}</span>
+              <span class="tag ${task.completed ? 'is-accent' : isNow ? 'is-accent' : ''}">${statusLabel}</span>
               <span>${task.mode === 'auto' ? 'tracked from logs' : 'tap to toggle'}</span>
             </span>
           </span>
-          <span class="checkbox-status">${task.completed ? 'OK' : ''}</span>
+          <span class="checkbox-status">${task.completed ? '\u2713' : ''}</span>
         `;
+
         if (task.mode === 'manual') {
-          button.addEventListener('click', () => toggleTask(task.name, task.period, !task.completed, button));
+          button.addEventListener('click', () => toggleTask(task.name, task.time, !task.completed, button));
         } else {
           button.disabled = true;
         }
-        els.currentTaskList.appendChild(button);
+        els.scheduleTaskList.appendChild(button);
       });
 
+      // Supplements
       const supplements = getSupplements(meta);
       els.supplementCount.textContent = `${supplements.length} items`;
       els.supplementList.innerHTML = '';
@@ -1398,7 +1451,7 @@ with check (true);`;
             <span>${supplement.name}</span>
             <span class="muted">${checked ? 'Logged for today' : 'Tap to mark taken'}</span>
           </span>
-          <span class="checkbox-status">${checked ? 'OK' : ''}</span>
+          <span class="checkbox-status">${checked ? '\u2713' : ''}</span>
         `;
         button.addEventListener('click', () => toggleSupplement(supplement.name, !checked, button));
         els.supplementList.appendChild(button);
