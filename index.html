@@ -556,7 +556,7 @@
           </div>
           <div class="field">
             <label for="user-name">Name</label>
-            <input id="user-name" name="name" type="text" maxlength="60" placeholder="Enter name" required>
+            <input id="user-name" name="name" type="text" maxlength="60" placeholder="Optional">
           </div>
           <button class="btn btn-primary" type="submit">Save and Connect</button>
         </form>
@@ -782,7 +782,7 @@
           <form id="settings-form" class="form-grid">
             <div class="field">
               <label for="settings-name">Name</label>
-              <input id="settings-name" name="name" type="text" maxlength="60" required>
+              <input id="settings-name" name="name" type="text" maxlength="60" placeholder="Optional">
             </div>
             <div class="field">
               <label for="settings-cycle-start">Cycle Start Date</label>
@@ -825,9 +825,18 @@
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
     const STORAGE_KEY = 'cycle-tracker-config';
+    const FORCE_SETUP_KEY = 'cycle-tracker-force-setup';
     const TOTAL_DAYS = 126;
+    const DEFAULT_NAME = 'Cycle Tracker';
+    const DEFAULT_CYCLE_START_DATE = '2026-03-30';
     const DEFAULT_SUPABASE_URL = 'https://dhadxtxmhqmvlkhcjkcf.supabase.co';
     const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYWR4dHhtaHFtdmxraGNqa2NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3MjA4MTksImV4cCI6MjA5MDI5NjgxOX0.yfNp1-w4A_wur3cUT0A0dVlNp_Nc4J2rG8u-hozLn_8';
+    const DEFAULT_CONFIG = {
+      supabaseUrl: DEFAULT_SUPABASE_URL,
+      supabaseAnonKey: DEFAULT_SUPABASE_ANON_KEY,
+      cycleStartDate: DEFAULT_CYCLE_START_DATE,
+      name: DEFAULT_NAME,
+    };
     const SQL_SNIPPET = `create extension if not exists pgcrypto;
 
 create table if not exists public.daily_logs (
@@ -1002,6 +1011,16 @@ with check (true);`;
       localStorage.removeItem(STORAGE_KEY);
       state.config = null;
       state.supabase = null;
+    }
+
+    function normalizeConfig(config) {
+      const source = config || {};
+      return {
+        supabaseUrl: source.supabaseUrl || DEFAULT_SUPABASE_URL,
+        supabaseAnonKey: source.supabaseAnonKey || DEFAULT_SUPABASE_ANON_KEY,
+        cycleStartDate: source.cycleStartDate || DEFAULT_CYCLE_START_DATE,
+        name: source.name || DEFAULT_NAME,
+      };
     }
 
     function initClient(config) {
@@ -1258,8 +1277,8 @@ with check (true);`;
       const config = state.config || {};
       els.setupForm.supabaseUrl.value = config.supabaseUrl || DEFAULT_SUPABASE_URL;
       els.setupForm.supabaseAnonKey.value = config.supabaseAnonKey || DEFAULT_SUPABASE_ANON_KEY;
-      els.setupForm.cycleStartDate.value = config.cycleStartDate || '';
-      els.setupForm.name.value = config.name || '';
+      els.setupForm.cycleStartDate.value = config.cycleStartDate || DEFAULT_CYCLE_START_DATE;
+      els.setupForm.name.value = config.name || DEFAULT_NAME;
     }
 
     function setAppMode() {
@@ -1285,7 +1304,8 @@ with check (true);`;
     }
 
     function renderHeader() {
-      els.headerName.textContent = `${state.config.name} · Cycle Tracker`;
+      const displayName = state.config.name || DEFAULT_NAME;
+      els.headerName.textContent = `${displayName} · Cycle Tracker`;
       els.headerDate.textContent = formatLongDate();
     }
 
@@ -1535,8 +1555,8 @@ with check (true);`;
     }
 
     function renderSettings() {
-      els.settingsForm.name.value = state.config.name;
-      els.settingsForm.cycleStartDate.value = state.config.cycleStartDate;
+      els.settingsForm.name.value = state.config.name || DEFAULT_NAME;
+      els.settingsForm.cycleStartDate.value = state.config.cycleStartDate || DEFAULT_CYCLE_START_DATE;
       els.settingsSupabaseUrl.value = truncateUrl(state.config.supabaseUrl);
     }
 
@@ -1627,8 +1647,8 @@ with check (true);`;
       const config = {
         supabaseUrl: String(formData.get('supabaseUrl') || '').trim(),
         supabaseAnonKey: String(formData.get('supabaseAnonKey') || '').trim(),
-        cycleStartDate: String(formData.get('cycleStartDate') || ''),
-        name: String(formData.get('name') || '').trim(),
+        cycleStartDate: String(formData.get('cycleStartDate') || DEFAULT_CYCLE_START_DATE),
+        name: String(formData.get('name') || '').trim() || DEFAULT_NAME,
       };
 
       saveConfig(config);
@@ -1735,8 +1755,8 @@ with check (true);`;
       const formData = new FormData(event.currentTarget);
       const nextConfig = {
         ...state.config,
-        name: String(formData.get('name') || '').trim(),
-        cycleStartDate: String(formData.get('cycleStartDate') || ''),
+        name: String(formData.get('name') || '').trim() || DEFAULT_NAME,
+        cycleStartDate: String(formData.get('cycleStartDate') || DEFAULT_CYCLE_START_DATE),
       };
       saveConfig(nextConfig);
       renderHeader();
@@ -1746,6 +1766,7 @@ with check (true);`;
     }
 
     function handleReset() {
+      localStorage.setItem(FORCE_SETUP_KEY, '1');
       clearConfig();
       location.reload();
     }
@@ -1779,11 +1800,21 @@ with check (true);`;
       els.sqlBlock.textContent = SQL_SNIPPET;
       bindEvents();
       renderEnergyButtons();
-      state.config = loadConfig();
+      const forceSetup = localStorage.getItem(FORCE_SETUP_KEY) === '1';
+      const loadedConfig = loadConfig();
+      state.config = normalizeConfig(loadedConfig || DEFAULT_CONFIG);
 
-      if (!state.config) {
+      if (forceSetup) {
+        localStorage.removeItem(FORCE_SETUP_KEY);
+        if (!loadedConfig) {
+          state.config = normalizeConfig(DEFAULT_CONFIG);
+        }
         setSetupMode();
         return;
+      }
+
+      if (!loadedConfig) {
+        saveConfig(state.config);
       }
 
       try {
