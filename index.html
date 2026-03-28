@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Cycle Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #111111;
+      --panel-2: #151515;
+      --border: #232323;
+      --text: #f3f3f3;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.16);
+      --danger: #dc2626;
+      --shadow: 0 0 0 1px rgba(34, 197, 94, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      padding: 16px 16px 96px;
+      background: var(--bg);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .screen {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-tight {
+      padding: 12px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .app-title {
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle,
+    .muted {
+      color: var(--muted);
+    }
+
+    .mono,
+    .sql-block,
+    .stat-value,
+    .phase-badge,
+    .toast,
+    .progress-label,
+    .table-wrap table,
+    .log-list,
+    .checkbox-label span:last-child {
+      font-family: 'Space Mono', monospace;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .field textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn,
+    .tab-btn,
+    .energy-btn,
+    .checkbox-card {
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn {
+      padding: 12px 14px;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #051107;
+      border-color: var(--accent);
+    }
+
+    .btn-danger {
+      border-color: rgba(220, 38, 38, 0.35);
+      color: #fca5a5;
+    }
+
+    .btn:disabled,
+    .checkbox-card:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .sql-block {
+      margin-top: 10px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #050505;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+      white-space: pre;
+      font-size: 0.75rem;
+      line-height: 1.55;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .phase-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .phase-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid rgba(34, 197, 94, 0.24);
+      font-size: 0.78rem;
+    }
+
+    .alert {
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      background: rgba(34, 197, 94, 0.08);
+      color: #d3f9df;
+      border-radius: 14px;
+      padding: 14px;
+      font-weight: 600;
+    }
+
+    .pulse {
+      animation: pulse 1.4s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.3); }
+      70% { box-shadow: 0 0 0 14px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: #060606;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: var(--accent);
+      transition: width 0.2s ease;
+    }
+
+    .progress-label {
+      margin-top: 8px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .supplement-list,
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-card {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .task-card.is-complete {
+      border-color: rgba(34, 197, 94, 0.4);
+      background: rgba(34, 197, 94, 0.12);
+    }
+
+    .task-card.is-auto {
+      cursor: default;
+    }
+
+    .task-main {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .task-title {
+      font-weight: 600;
+    }
+
+    .task-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #0d0d0d;
+      color: var(--muted);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .tag.is-accent {
+      color: var(--accent);
+      border-color: rgba(34, 197, 94, 0.3);
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .split-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .checkbox-card {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      text-align: left;
+    }
+
+    .checkbox-card.is-checked {
+      border-color: rgba(34, 197, 94, 0.4);
+      background: rgba(34, 197, 94, 0.12);
+    }
+
+    .checkbox-label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .checkbox-status {
+      min-width: 22px;
+      min-height: 22px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+
+    .checkbox-card.is-checked .checkbox-status {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #051107;
+    }
+
+    .energy-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .energy-btn {
+      padding: 12px 0;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+    }
+
+    .energy-btn.active,
+    .tab-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    .table-wrap th,
+    .table-wrap td {
+      padding: 10px 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .list-item {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel-2);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(10, 10, 10, 0.96);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+
+    .tab-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .tab-btn {
+      padding: 10px 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .toast-stack {
+      position: fixed;
+      left: 50%;
+      bottom: 84px;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 448px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(12, 12, 12, 0.96);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+
+    .danger-text {
+      color: #fca5a5;
+      font-size: 0.92rem;
+    }
+
+    canvas {
+      width: 100%;
+      height: 220px;
+      background: #050505;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display: block;
+    }
+
+    @media (min-width: 400px) {
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <section id="setup-screen" class="screen hidden">
+      <div class="panel">
+        <div class="title-row">
+          <div>
+            <h1 class="app-title">Cycle Tracker</h1>
+            <p class="subtitle">Configure Supabase and cycle settings.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <form id="setup-form" class="form-grid">
+          <div class="field">
+            <label for="supabase-url">Supabase Project URL</label>
+            <input id="supabase-url" name="supabaseUrl" type="url" placeholder="https://project.supabase.co" required>
+          </div>
+          <div class="field">
+            <label for="supabase-key">Supabase Anon Key</label>
+            <textarea id="supabase-key" name="supabaseAnonKey" placeholder="Paste anon key" required></textarea>
+          </div>
+          <div class="field">
+            <label for="cycle-start">Cycle Start Date</label>
+            <input id="cycle-start" name="cycleStartDate" type="date" required>
+          </div>
+          <div class="field">
+            <label for="user-name">Name</label>
+            <input id="user-name" name="name" type="text" maxlength="60" placeholder="Enter name" required>
+          </div>
+          <button class="btn btn-primary" type="submit">Save and Connect</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="section-head">
+          <h2>Supabase SQL</h2>
+          <button id="copy-sql-btn" class="btn" type="button">Copy SQL</button>
+        </div>
+        <p class="muted">Run this once in the Supabase SQL editor before connecting.</p>
+        <pre id="sql-block" class="sql-block"></pre>
+      </div>
+    </section>
+
+    <section id="app-screen" class="screen hidden">
+      <div class="panel">
+        <div class="title-row">
+          <div>
+            <h1 id="header-name" class="app-title">Cycle Tracker</h1>
+            <p id="header-date" class="subtitle"></p>
+          </div>
+        </div>
+      </div>
+
+      <section id="tab-today" class="tab-screen">
+        <div class="panel">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Week</div>
+              <div id="stat-week" class="stat-value">-</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Day</div>
+              <div id="stat-day" class="stat-value">-</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Remaining</div>
+              <div id="stat-remaining" class="stat-value">-</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Last Weight</div>
+              <div id="stat-weight" class="stat-value">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="phase-row">
+            <h2>Today</h2>
+            <div id="phase-badge" class="phase-badge">-</div>
+          </div>
+        </div>
+
+        <div id="injection-alert" class="panel alert hidden"></div>
+
+        <div class="panel">
+          <h2>Cycle Progress</h2>
+          <div class="progress-track">
+            <div id="cycle-progress" class="progress-bar"></div>
+          </div>
+          <div id="cycle-progress-label" class="progress-label">-</div>
+        </div>
+
+        <div class="panel">
+          <div class="section-head">
+            <h2>Current Checklist</h2>
+            <span id="current-block-label" class="phase-badge">-</span>
+          </div>
+          <p id="current-block-subtitle" class="muted"></p>
+          <div id="current-task-list" class="task-list" style="margin-top: 12px;"></div>
+        </div>
+
+        <div class="panel">
+          <div class="section-head">
+            <h2>Supplements</h2>
+            <span id="supplement-count" class="muted"></span>
+          </div>
+          <div id="supplement-list" class="supplement-list"></div>
+        </div>
+      </section>
+
+      <section id="tab-log" class="tab-screen hidden">
+        <div class="split-grid">
+          <div class="panel">
+            <h2>Daily Log</h2>
+            <form id="daily-log-form" class="form-grid" autocomplete="off">
+              <div class="field">
+                <label for="weight-kg">Weight (kg)</label>
+                <input id="weight-kg" name="weight_kg" type="number" step="0.1" min="0">
+              </div>
+              <div class="field">
+                <label for="water-liters">Water (L)</label>
+                <input id="water-liters" name="water_liters" type="number" step="0.1" min="0">
+              </div>
+              <div class="field">
+                <label for="calories">Calories</label>
+                <input id="calories" name="calories" type="number" step="1" min="0">
+              </div>
+              <div class="field">
+                <label for="sleep-hours">Sleep (hrs)</label>
+                <input id="sleep-hours" name="sleep_hours" type="number" step="0.1" min="0">
+              </div>
+              <div class="field">
+                <label>Energy Level</label>
+                <div id="energy-grid" class="energy-grid"></div>
+                <input id="energy-level" name="energy_level" type="hidden">
+              </div>
+              <div class="field">
+                <label for="daily-notes">Notes</label>
+                <textarea id="daily-notes" name="notes" placeholder="Notes"></textarea>
+              </div>
+              <button id="save-log-btn" class="btn btn-primary" type="submit">Save Today</button>
+            </form>
+          </div>
+
+          <div class="panel">
+            <h2>Workout</h2>
+            <form id="workout-form" class="form-grid" autocomplete="off">
+              <div class="field">
+                <label for="workout-name">Workout Name</label>
+                <input id="workout-name" name="workout_name" type="text" maxlength="80" placeholder="Push / Pull / Legs / Cardio" required>
+              </div>
+              <div class="field">
+                <label for="duration-minutes">Duration (min)</label>
+                <input id="duration-minutes" name="duration_minutes" type="number" step="1" min="0" required>
+              </div>
+              <div class="field">
+                <label for="workout-rating">Performance (1-10)</label>
+                <input id="workout-rating" name="performance_level" type="number" step="1" min="1" max="10" required>
+              </div>
+              <div class="field">
+                <label for="workout-notes">Workout Notes</label>
+                <textarea id="workout-notes" name="notes" placeholder="Exercises, load, pumps, cardio, recovery"></textarea>
+              </div>
+              <button id="save-workout-btn" class="btn btn-primary" type="submit">Save Workout</button>
+            </form>
+          </div>
+
+          <div class="panel">
+            <div class="section-head">
+              <h2>Recent Workouts</h2>
+            </div>
+            <div id="recent-workouts" class="log-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-inject" class="tab-screen hidden">
+        <div class="panel">
+          <h2>Injection Log</h2>
+          <form id="injection-form" class="form-grid" autocomplete="off">
+            <div class="field">
+              <label for="compound">Compound</label>
+              <select id="compound" name="compound" required>
+                <option value="Test Cypionate">Test Cypionate</option>
+                <option value="Masteron Enanthate">Masteron Enanthate</option>
+                <option value="Test Cyp + Mast E combined">Test Cyp + Mast E combined</option>
+                <option value="HCG">HCG</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dose-mg">Dose (mg)</label>
+              <input id="dose-mg" name="dose_mg" type="number" step="0.1" min="0" required>
+            </div>
+            <div class="field">
+              <label for="site">Site</label>
+              <select id="site" name="site" required>
+                <option value="Left Glute">Left Glute</option>
+                <option value="Right Glute">Right Glute</option>
+                <option value="Left Quad">Left Quad</option>
+                <option value="Right Quad">Right Quad</option>
+                <option value="Subcutaneous">Subcutaneous</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="injection-notes">Notes</label>
+              <textarea id="injection-notes" name="notes" placeholder="Notes"></textarea>
+            </div>
+            <button id="save-injection-btn" class="btn btn-primary" type="submit">Save Injection</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="section-head">
+            <h2>Last 10 Injections</h2>
+          </div>
+          <div id="recent-injections" class="log-list"></div>
+        </div>
+      </section>
+
+      <section id="tab-progress" class="tab-screen hidden">
+        <div class="panel">
+          <h2>Weight Trend</h2>
+          <canvas id="weight-chart" width="448" height="220"></canvas>
+        </div>
+
+        <div class="panel">
+          <div class="section-head">
+            <h2>Last 14 Logs</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Weight</th>
+                  <th>Water</th>
+                  <th>Calories</th>
+                  <th>Energy</th>
+                </tr>
+              </thead>
+              <tbody id="progress-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-settings" class="tab-screen hidden">
+        <div class="panel">
+          <h2>Settings</h2>
+          <form id="settings-form" class="form-grid">
+            <div class="field">
+              <label for="settings-name">Name</label>
+              <input id="settings-name" name="name" type="text" maxlength="60" required>
+            </div>
+            <div class="field">
+              <label for="settings-cycle-start">Cycle Start Date</label>
+              <input id="settings-cycle-start" name="cycleStartDate" type="date" required>
+            </div>
+            <div class="field">
+              <label>Connected Supabase</label>
+              <input id="settings-supabase-url" type="text" readonly>
+            </div>
+            <button class="btn btn-primary" type="submit">Save Settings</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="section-head">
+            <h2>Danger Zone</h2>
+          </div>
+          <p class="danger-text">Reset clears local configuration and reloads setup.</p>
+          <div class="button-row">
+            <button id="reset-app-btn" class="btn btn-danger" type="button">Reset App</button>
+          </div>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <nav id="bottom-nav" class="bottom-nav hidden">
+    <div class="tab-row">
+      <button class="tab-btn active" data-tab="today" type="button">Today</button>
+      <button class="tab-btn" data-tab="log" type="button">Log</button>
+      <button class="tab-btn" data-tab="inject" type="button">Inject</button>
+      <button class="tab-btn" data-tab="progress" type="button">Progress</button>
+      <button class="tab-btn" data-tab="settings" type="button">Settings</button>
+    </div>
+  </nav>
+
+  <div id="toast-stack" class="toast-stack"></div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const STORAGE_KEY = 'cycle-tracker-config';
+    const TOTAL_DAYS = 126;
+    const DEFAULT_SUPABASE_URL = 'https://dhadxtxmhqmvlkhcjkcf.supabase.co';
+    const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYWR4dHhtaHFtdmxraGNqa2NmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3MjA4MTksImV4cCI6MjA5MDI5NjgxOX0.yfNp1-w4A_wur3cUT0A0dVlNp_Nc4J2rG8u-hozLn_8';
+    const SQL_SNIPPET = `create extension if not exists pgcrypto;
+
+create table if not exists public.daily_logs (
+  id uuid primary key default gen_random_uuid(),
+  log_date date not null unique,
+  weight_kg numeric,
+  water_liters numeric,
+  calories integer,
+  energy_level integer check (energy_level between 1 and 10),
+  sleep_hours numeric,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.injections (
+  id uuid primary key default gen_random_uuid(),
+  injection_date date not null,
+  compound text not null,
+  dose_mg numeric,
+  site text,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.supplement_logs (
+  id uuid primary key default gen_random_uuid(),
+  log_date date not null,
+  supplement_name text not null,
+  taken boolean not null default false,
+  created_at timestamptz not null default now(),
+  unique (log_date, supplement_name)
+);
+
+create table if not exists public.task_logs (
+  id uuid primary key default gen_random_uuid(),
+  log_date date not null,
+  task_name text not null,
+  day_period text not null,
+  completed boolean not null default false,
+  created_at timestamptz not null default now(),
+  unique (log_date, task_name)
+);
+
+create table if not exists public.workout_logs (
+  id uuid primary key default gen_random_uuid(),
+  workout_date date not null,
+  workout_name text not null,
+  duration_minutes integer,
+  performance_level integer check (performance_level between 1 and 10),
+  notes text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.daily_logs enable row level security;
+alter table public.injections enable row level security;
+alter table public.supplement_logs enable row level security;
+alter table public.task_logs enable row level security;
+alter table public.workout_logs enable row level security;
+
+drop policy if exists "allow_all_anon_daily_logs" on public.daily_logs;
+drop policy if exists "allow_all_anon_injections" on public.injections;
+drop policy if exists "allow_all_anon_supplement_logs" on public.supplement_logs;
+drop policy if exists "allow_all_anon_task_logs" on public.task_logs;
+drop policy if exists "allow_all_anon_workout_logs" on public.workout_logs;
+
+create policy "allow_all_anon_daily_logs"
+on public.daily_logs
+for all
+to anon
+using (true)
+with check (true);
+
+create policy "allow_all_anon_injections"
+on public.injections
+for all
+to anon
+using (true)
+with check (true);
+
+create policy "allow_all_anon_supplement_logs"
+on public.supplement_logs
+for all
+to anon
+using (true)
+with check (true);
+
+create policy "allow_all_anon_task_logs"
+on public.task_logs
+for all
+to anon
+using (true)
+with check (true);
+
+create policy "allow_all_anon_workout_logs"
+on public.workout_logs
+for all
+to anon
+using (true)
+with check (true);`;
+
+    const state = {
+      config: null,
+      supabase: null,
+      activeTab: 'today',
+      todayLog: null,
+      latestWeightLog: null,
+      recentLogs: [],
+      recentInjections: [],
+      recentWorkouts: [],
+      todayWorkoutCount: 0,
+      todayInjectionCount: 0,
+      todaySupplements: new Map(),
+      todayTasks: new Map(),
+      energyLevel: null,
+      loading: false,
+    };
+
+    const els = {
+      setupScreen: document.getElementById('setup-screen'),
+      appScreen: document.getElementById('app-screen'),
+      bottomNav: document.getElementById('bottom-nav'),
+      setupForm: document.getElementById('setup-form'),
+      settingsForm: document.getElementById('settings-form'),
+      dailyLogForm: document.getElementById('daily-log-form'),
+      injectionForm: document.getElementById('injection-form'),
+      copySqlBtn: document.getElementById('copy-sql-btn'),
+      sqlBlock: document.getElementById('sql-block'),
+      headerName: document.getElementById('header-name'),
+      headerDate: document.getElementById('header-date'),
+      statWeek: document.getElementById('stat-week'),
+      statDay: document.getElementById('stat-day'),
+      statRemaining: document.getElementById('stat-remaining'),
+      statWeight: document.getElementById('stat-weight'),
+      phaseBadge: document.getElementById('phase-badge'),
+      injectionAlert: document.getElementById('injection-alert'),
+      cycleProgress: document.getElementById('cycle-progress'),
+      cycleProgressLabel: document.getElementById('cycle-progress-label'),
+      currentBlockLabel: document.getElementById('current-block-label'),
+      currentBlockSubtitle: document.getElementById('current-block-subtitle'),
+      currentTaskList: document.getElementById('current-task-list'),
+      supplementList: document.getElementById('supplement-list'),
+      supplementCount: document.getElementById('supplement-count'),
+      energyGrid: document.getElementById('energy-grid'),
+      energyLevelInput: document.getElementById('energy-level'),
+      workoutForm: document.getElementById('workout-form'),
+      recentWorkouts: document.getElementById('recent-workouts'),
+      recentInjections: document.getElementById('recent-injections'),
+      progressTableBody: document.getElementById('progress-table-body'),
+      weightChart: document.getElementById('weight-chart'),
+      settingsSupabaseUrl: document.getElementById('settings-supabase-url'),
+      resetAppBtn: document.getElementById('reset-app-btn'),
+      toastStack: document.getElementById('toast-stack'),
+      tabButtons: Array.from(document.querySelectorAll('.tab-btn')),
+      tabScreens: Array.from(document.querySelectorAll('.tab-screen')),
+    };
+
+    function loadConfig() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveConfig(config) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+      state.config = config;
+    }
+
+    function clearConfig() {
+      localStorage.removeItem(STORAGE_KEY);
+      state.config = null;
+      state.supabase = null;
+    }
+
+    function initClient(config) {
+      state.supabase = createClient(config.supabaseUrl, config.supabaseAnonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+    }
+
+    function todayIso() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function parseDateInput(value) {
+      return new Date(`${value}T00:00:00`);
+    }
+
+    function daysBetween(start, end) {
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const startUtc = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
+      const endUtc = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
+      return Math.floor((endUtc - startUtc) / msPerDay);
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function getCycleMeta(date = new Date()) {
+      const start = parseDateInput(state.config.cycleStartDate);
+      const rawDay = daysBetween(start, date) + 1;
+      const dayNumber = Math.max(rawDay, 1);
+      const cappedDay = clamp(dayNumber, 1, TOTAL_DAYS);
+      const week = Math.ceil(cappedDay / 7);
+      const daysRemaining = Math.max(TOTAL_DAYS - cappedDay, 0);
+      return {
+        rawDay,
+        dayNumber,
+        cappedDay,
+        week,
+        daysRemaining,
+        complete: rawDay > TOTAL_DAYS,
+      };
+    }
+
+    function getPhase(dayNumber) {
+      if (dayNumber <= 28) return 'Winstrol Kickstart · Weeks 1–4';
+      if (dayNumber <= 56) return 'Base Phase · Weeks 5–8';
+      if (dayNumber <= 84) return 'Masteron Finisher · Weeks 9–12';
+      if (dayNumber <= 98) return 'Bridge / HCG · Weeks 13–14';
+      return 'PCT · Weeks 15–18';
+    }
+
+    function getInjectionSite(date = new Date()) {
+      const weekday = date.getDay();
+      if (![1, 4].includes(weekday)) return null;
+      const start = parseDateInput(state.config.cycleStartDate);
+      let count = 0;
+      const cursor = new Date(start);
+      while (cursor <= date) {
+        const day = cursor.getDay();
+        if (day === 1 || day === 4) count += 1;
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      return count % 2 === 1 ? 'LEFT GLUTE' : 'RIGHT GLUTE';
+    }
+
+    function getSupplements(meta) {
+      const supplements = [
+        { name: 'NAC 600mg x2' },
+        { name: 'Omega-3 4g' },
+      ];
+
+      if (meta.week >= 1 && meta.week <= 4) {
+        supplements.push(
+          { name: 'Winstrol 50mg split' },
+          { name: 'TUDCA 500mg' },
+          { name: 'Taurine 3g' },
+          { name: 'Glucosamine 1500mg' },
+          { name: 'Aromasin 12.5mg' },
+          { name: 'CoQ10 200mg' },
+        );
+      }
+
+      if (meta.week >= 5 && meta.week <= 12) {
+        supplements.push(
+          { name: 'Aromasin 12.5mg' },
+          { name: 'CoQ10 200mg' },
+          { name: 'Glucosamine 1500mg' },
+        );
+      }
+
+      if (meta.week >= 13 && meta.week <= 14) {
+        const bridgeOffset = meta.cappedDay - 85;
+        if (bridgeOffset % 2 === 0) {
+          supplements.push({ name: 'Aromasin 12.5mg EOD' });
+        }
+      }
+
+      if (meta.week >= 15 && meta.week <= 18) {
+        const pctEarly = meta.week <= 16;
+        supplements.push(
+          { name: pctEarly ? 'Nolvadex 40mg' : 'Nolvadex 20mg' },
+          { name: pctEarly ? 'Clomid 50mg' : 'Clomid 25mg' },
+        );
+      }
+
+      return supplements;
+    }
+
+    function formatShortDate(dateString) {
+      return new Date(`${dateString}T00:00:00`).toLocaleDateString([], {
+        month: 'short',
+        day: 'numeric',
+      });
+    }
+
+    function formatLongDate(date = new Date()) {
+      return date.toLocaleDateString([], {
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+
+    function truncateUrl(url) {
+      return url.length > 34 ? `${url.slice(0, 31)}...` : url;
+    }
+
+    function sanitizeNumber(value) {
+      return value === '' || value == null ? null : Number(value);
+    }
+
+    function getCurrentPeriod(date = new Date()) {
+      const hour = date.getHours();
+      if (hour < 11) {
+        return { key: 'morning', label: 'Morning Block' };
+      }
+      if (hour < 17) {
+        return { key: 'midday', label: 'Midday Block' };
+      }
+      return { key: 'evening', label: 'Evening Block' };
+    }
+
+    function getDailyTasks(meta, date = new Date()) {
+      const currentPeriod = getCurrentPeriod(date);
+      const tasks = [
+        {
+          name: 'Log weight and vitals',
+          period: 'morning',
+          detail: 'Complete the daily log with weight, sleep, energy, water, and calories.',
+          mode: 'auto',
+          completed: Boolean(state.todayLog),
+        },
+        {
+          name: 'Hydrate first liter',
+          period: 'morning',
+          detail: 'Get at least 1L of water in early.',
+          mode: 'manual',
+          completed: state.todayTasks.get('Hydrate first liter') === true,
+        },
+        {
+          name: 'Take morning stack',
+          period: 'morning',
+          detail: 'Handle morning supplements and the first oral dose block.',
+          mode: 'manual',
+          completed: state.todayTasks.get('Take morning stack') === true,
+        },
+        {
+          name: 'Workout session',
+          period: 'midday',
+          detail: 'Log your training session once complete.',
+          mode: 'auto',
+          completed: state.todayWorkoutCount > 0,
+        },
+        {
+          name: 'Hit hydration target',
+          period: 'midday',
+          detail: 'Stay on pace for the day water target.',
+          mode: 'manual',
+          completed: state.todayTasks.get('Hit hydration target') === true,
+        },
+        {
+          name: 'Meal and calorie check',
+          period: 'midday',
+          detail: 'Make sure calories are trending where they should be.',
+          mode: 'manual',
+          completed: state.todayTasks.get('Meal and calorie check') === true,
+        },
+        {
+          name: 'Finish evening stack',
+          period: 'evening',
+          detail: 'Close out PM supplements and split doses.',
+          mode: 'manual',
+          completed: state.todayTasks.get('Finish evening stack') === true,
+        },
+        {
+          name: 'Review notes and recovery',
+          period: 'evening',
+          detail: 'Update notes, check recovery, and prep sleep.',
+          mode: 'manual',
+          completed: state.todayTasks.get('Review notes and recovery') === true,
+        },
+      ];
+
+      if ([1, 4].includes(date.getDay())) {
+        tasks.push({
+          name: 'Injection due',
+          period: currentPeriod.key === 'evening' ? 'midday' : currentPeriod.key,
+          detail: `Scheduled pin: Test Cyp 250mg + Mast E 200mg into ${getInjectionSite(date) || 'assigned site'}.`,
+          mode: 'auto',
+          completed: state.todayInjectionCount > 0,
+        });
+      }
+
+      if (meta.week >= 1 && meta.week <= 4) {
+        tasks.push({
+          name: 'Split Winstrol dose',
+          period: currentPeriod.key === 'morning' ? 'morning' : 'evening',
+          detail: 'Take the scheduled split oral dose for weeks 1-4.',
+          mode: 'manual',
+          completed: state.todayTasks.get('Split Winstrol dose') === true,
+        });
+      }
+
+      if (meta.week >= 15 && meta.week <= 18) {
+        tasks.push({
+          name: 'PCT dose check',
+          period: currentPeriod.key,
+          detail: meta.week <= 16 ? 'Nolvadex 40mg + Clomid 50mg scheduled today.' : 'Nolvadex 20mg + Clomid 25mg scheduled today.',
+          mode: 'manual',
+          completed: state.todayTasks.get('PCT dose check') === true,
+        });
+      }
+
+      return tasks;
+    }
+
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      els.toastStack.appendChild(toast);
+      window.setTimeout(() => {
+        toast.remove();
+      }, 2000);
+    }
+
+    function setSetupMode() {
+      els.setupScreen.classList.remove('hidden');
+      els.appScreen.classList.add('hidden');
+      els.bottomNav.classList.add('hidden');
+      els.sqlBlock.textContent = SQL_SNIPPET;
+      const config = state.config || {};
+      els.setupForm.supabaseUrl.value = config.supabaseUrl || DEFAULT_SUPABASE_URL;
+      els.setupForm.supabaseAnonKey.value = config.supabaseAnonKey || DEFAULT_SUPABASE_ANON_KEY;
+      els.setupForm.cycleStartDate.value = config.cycleStartDate || '';
+      els.setupForm.name.value = config.name || '';
+    }
+
+    function setAppMode() {
+      els.setupScreen.classList.add('hidden');
+      els.appScreen.classList.remove('hidden');
+      els.bottomNav.classList.remove('hidden');
+      renderHeader();
+      renderSettings();
+      setActiveTab(state.activeTab);
+    }
+
+    function setActiveTab(tab) {
+      state.activeTab = tab;
+      els.tabButtons.forEach((button) => {
+        button.classList.toggle('active', button.dataset.tab === tab);
+      });
+      els.tabScreens.forEach((screen) => {
+        screen.classList.toggle('hidden', screen.id !== `tab-${tab}`);
+      });
+      if (tab === 'progress') {
+        drawWeightChart();
+      }
+    }
+
+    function renderHeader() {
+      els.headerName.textContent = `${state.config.name} · Cycle Tracker`;
+      els.headerDate.textContent = formatLongDate();
+    }
+
+    function renderEnergyButtons() {
+      els.energyGrid.innerHTML = '';
+      for (let level = 1; level <= 10; level += 1) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'energy-btn';
+        button.textContent = String(level);
+        button.classList.toggle('active', Number(state.energyLevel) === level);
+        button.addEventListener('click', () => {
+          state.energyLevel = level;
+          els.energyLevelInput.value = String(level);
+          renderEnergyButtons();
+        });
+        els.energyGrid.appendChild(button);
+      }
+    }
+
+    function renderToday() {
+      const meta = getCycleMeta();
+      const currentPeriod = getCurrentPeriod();
+      els.statWeek.textContent = `W${meta.week}`;
+      els.statDay.textContent = meta.complete ? `126+` : String(meta.cappedDay);
+      els.statRemaining.textContent = String(meta.daysRemaining);
+      els.statWeight.textContent = state.latestWeightLog?.weight_kg != null ? `${state.latestWeightLog.weight_kg}kg` : '-';
+      els.phaseBadge.textContent = getPhase(meta.cappedDay);
+      els.cycleProgress.style.width = `${(meta.cappedDay / TOTAL_DAYS) * 100}%`;
+      els.cycleProgressLabel.textContent = `Day ${meta.cappedDay} of ${TOTAL_DAYS}`;
+
+      const site = getInjectionSite();
+      if (site) {
+        els.injectionAlert.classList.remove('hidden');
+        els.injectionAlert.classList.add('pulse');
+        els.injectionAlert.textContent = `INJECTION DAY — Test Cyp 250mg + Mast E 200mg → ${site}`;
+      } else {
+        els.injectionAlert.classList.add('hidden');
+        els.injectionAlert.classList.remove('pulse');
+      }
+
+      const taskList = getDailyTasks(meta);
+      const currentTasks = taskList.filter((task) => task.period === currentPeriod.key);
+      els.currentBlockLabel.textContent = currentPeriod.label;
+      els.currentBlockSubtitle.textContent = `${currentTasks.filter((task) => task.completed).length}/${currentTasks.length} tasks complete for this part of the day.`;
+      els.currentTaskList.innerHTML = '';
+
+      currentTasks.forEach((task) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `task-card${task.completed ? ' is-complete' : ''}${task.mode === 'auto' ? ' is-auto' : ''}`;
+        button.innerHTML = `
+          <span class="task-main">
+            <span class="task-title">${task.name}</span>
+            <span class="muted">${task.detail}</span>
+            <span class="task-meta">
+              <span class="tag ${task.completed ? 'is-accent' : ''}">${task.completed ? 'Complete' : 'Open'}</span>
+              <span>${task.mode === 'auto' ? 'tracked from logs' : 'tap to toggle'}</span>
+            </span>
+          </span>
+          <span class="checkbox-status">${task.completed ? 'OK' : ''}</span>
+        `;
+        if (task.mode === 'manual') {
+          button.addEventListener('click', () => toggleTask(task.name, task.period, !task.completed, button));
+        } else {
+          button.disabled = true;
+        }
+        els.currentTaskList.appendChild(button);
+      });
+
+      const supplements = getSupplements(meta);
+      els.supplementCount.textContent = `${supplements.length} items`;
+      els.supplementList.innerHTML = '';
+
+      if (!supplements.length) {
+        const empty = document.createElement('p');
+        empty.className = 'muted';
+        empty.textContent = 'No supplements scheduled today.';
+        els.supplementList.appendChild(empty);
+        return;
+      }
+
+      supplements.forEach((supplement) => {
+        const checked = state.todaySupplements.get(supplement.name) === true;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `checkbox-card${checked ? ' is-checked' : ''}`;
+        button.innerHTML = `
+          <span class="checkbox-label">
+            <span>${supplement.name}</span>
+            <span class="muted">${checked ? 'Logged for today' : 'Tap to mark taken'}</span>
+          </span>
+          <span class="checkbox-status">${checked ? 'OK' : ''}</span>
+        `;
+        button.addEventListener('click', () => toggleSupplement(supplement.name, !checked, button));
+        els.supplementList.appendChild(button);
+      });
+    }
+
+    function renderTodayLogForm() {
+      const form = els.dailyLogForm;
+      form.weight_kg.value = state.todayLog?.weight_kg ?? '';
+      form.water_liters.value = state.todayLog?.water_liters ?? '';
+      form.calories.value = state.todayLog?.calories ?? '';
+      form.sleep_hours.value = state.todayLog?.sleep_hours ?? '';
+      form.notes.value = state.todayLog?.notes ?? '';
+      state.energyLevel = state.todayLog?.energy_level ?? null;
+      els.energyLevelInput.value = state.energyLevel ?? '';
+      renderEnergyButtons();
+    }
+
+    function renderInjectionList() {
+      els.recentInjections.innerHTML = '';
+      if (!state.recentInjections.length) {
+        const empty = document.createElement('p');
+        empty.className = 'muted';
+        empty.textContent = 'No injections logged yet.';
+        els.recentInjections.appendChild(empty);
+        return;
+      }
+
+      state.recentInjections.forEach((entry) => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+          <strong>${entry.compound}</strong>
+          <span class="muted">${formatShortDate(entry.injection_date)} · ${entry.dose_mg ?? '-'}mg · ${entry.site || '-'}</span>
+          <span>${entry.notes || 'No notes'}</span>
+        `;
+        els.recentInjections.appendChild(item);
+      });
+    }
+
+    function renderWorkoutList() {
+      els.recentWorkouts.innerHTML = '';
+      if (!state.recentWorkouts.length) {
+        const empty = document.createElement('p');
+        empty.className = 'muted';
+        empty.textContent = 'No workouts logged yet.';
+        els.recentWorkouts.appendChild(empty);
+        return;
+      }
+
+      state.recentWorkouts.forEach((entry) => {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.innerHTML = `
+          <strong>${entry.workout_name}</strong>
+          <span class="muted">${formatShortDate(entry.workout_date)} · ${entry.duration_minutes ?? '-'} min · ${entry.performance_level ?? '-'} / 10</span>
+          <span>${entry.notes || 'No notes'}</span>
+        `;
+        els.recentWorkouts.appendChild(item);
+      });
+    }
+
+    function renderProgressTable() {
+      els.progressTableBody.innerHTML = '';
+      if (!state.recentLogs.length) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="5" class="muted">No log data yet.</td>';
+        els.progressTableBody.appendChild(row);
+        return;
+      }
+
+      state.recentLogs.slice(0, 14).forEach((log) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${formatShortDate(log.log_date)}</td>
+          <td>${log.weight_kg ?? '-'}</td>
+          <td>${log.water_liters ?? '-'}</td>
+          <td>${log.calories ?? '-'}</td>
+          <td>${log.energy_level ?? '-'}</td>
+        `;
+        els.progressTableBody.appendChild(row);
+      });
+    }
+
+    function drawWeightChart() {
+      const canvas = els.weightChart;
+      const context = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.clientWidth || 448;
+      const height = 220;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      context.scale(dpr, dpr);
+      context.clearRect(0, 0, width, height);
+
+      const entries = [...state.recentLogs]
+        .filter((entry) => entry.weight_kg != null)
+        .sort((a, b) => new Date(a.log_date) - new Date(b.log_date));
+
+      context.strokeStyle = '#1f1f1f';
+      context.lineWidth = 1;
+      for (let i = 0; i < 4; i += 1) {
+        const y = 20 + (i * (height - 40)) / 3;
+        context.beginPath();
+        context.moveTo(16, y);
+        context.lineTo(width - 16, y);
+        context.stroke();
+      }
+
+      if (entries.length < 2) {
+        context.fillStyle = '#9ca3af';
+        context.font = '12px Space Mono';
+        context.fillText('Need at least 2 weight logs', 16, height / 2);
+        return;
+      }
+
+      const weights = entries.map((entry) => Number(entry.weight_kg));
+      const minWeight = Math.min(...weights);
+      const maxWeight = Math.max(...weights);
+      const spread = Math.max(maxWeight - minWeight, 1);
+      const left = 16;
+      const right = width - 16;
+      const top = 20;
+      const bottom = height - 24;
+
+      context.strokeStyle = '#22c55e';
+      context.lineWidth = 2;
+      context.beginPath();
+
+      entries.forEach((entry, index) => {
+        const x = left + (index / (entries.length - 1)) * (right - left);
+        const y = bottom - ((Number(entry.weight_kg) - minWeight) / spread) * (bottom - top);
+        if (index === 0) {
+          context.moveTo(x, y);
+        } else {
+          context.lineTo(x, y);
+        }
+      });
+      context.stroke();
+
+      context.fillStyle = '#22c55e';
+      entries.forEach((entry, index) => {
+        const x = left + (index / (entries.length - 1)) * (right - left);
+        const y = bottom - ((Number(entry.weight_kg) - minWeight) / spread) * (bottom - top);
+        context.beginPath();
+        context.arc(x, y, 3, 0, Math.PI * 2);
+        context.fill();
+      });
+
+      context.fillStyle = '#9ca3af';
+      context.font = '11px Space Mono';
+      context.fillText(`${minWeight.toFixed(1)}kg`, 16, height - 6);
+      context.fillText(`${maxWeight.toFixed(1)}kg`, 16, 14);
+    }
+
+    function renderSettings() {
+      els.settingsForm.name.value = state.config.name;
+      els.settingsForm.cycleStartDate.value = state.config.cycleStartDate;
+      els.settingsSupabaseUrl.value = truncateUrl(state.config.supabaseUrl);
+    }
+
+    async function fetchDashboardData() {
+      const today = todayIso();
+      const supabase = state.supabase;
+
+      const [todayLogResult, recentLogsResult, recentInjectionsResult, supplementsResult, latestWeightResult, taskResult, workoutResult, todayInjectionResult, todayWorkoutResult] = await Promise.all([
+        supabase.from('daily_logs').select('*').eq('log_date', today).maybeSingle(),
+        supabase.from('daily_logs').select('*').order('log_date', { ascending: false }).limit(60),
+        supabase.from('injections').select('*').order('injection_date', { ascending: false }).limit(10),
+        supabase.from('supplement_logs').select('supplement_name, taken').eq('log_date', today),
+        supabase.from('daily_logs').select('weight_kg, log_date').not('weight_kg', 'is', null).order('log_date', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('task_logs').select('task_name, completed').eq('log_date', today),
+        supabase.from('workout_logs').select('*').order('workout_date', { ascending: false }).order('created_at', { ascending: false }).limit(7),
+        supabase.from('injections').select('id', { count: 'exact', head: true }).eq('injection_date', today),
+        supabase.from('workout_logs').select('id', { count: 'exact', head: true }).eq('workout_date', today),
+      ]);
+
+      const results = [todayLogResult, recentLogsResult, recentInjectionsResult, supplementsResult, latestWeightResult, taskResult, workoutResult, todayInjectionResult, todayWorkoutResult];
+      const failed = results.find((result) => result.error);
+      if (failed) {
+        throw failed.error;
+      }
+
+      state.todayLog = todayLogResult.data || null;
+      state.recentLogs = recentLogsResult.data || [];
+      state.recentInjections = recentInjectionsResult.data || [];
+      state.recentWorkouts = workoutResult.data || [];
+      state.latestWeightLog = latestWeightResult.data || null;
+      state.todaySupplements = new Map((supplementsResult.data || []).map((item) => [item.supplement_name, item.taken]));
+      state.todayTasks = new Map((taskResult.data || []).map((item) => [item.task_name, item.completed]));
+      state.todayInjectionCount = todayInjectionResult.count || 0;
+      state.todayWorkoutCount = todayWorkoutResult.count || 0;
+    }
+
+    async function refreshAndRender() {
+      await fetchDashboardData();
+      renderHeader();
+      renderToday();
+      renderTodayLogForm();
+      renderInjectionList();
+      renderWorkoutList();
+      renderProgressTable();
+      renderSettings();
+      if (state.activeTab === 'progress') {
+        drawWeightChart();
+      }
+    }
+
+    async function toggleSupplement(name, taken, button) {
+      button.disabled = true;
+      const { error } = await state.supabase
+        .from('supplement_logs')
+        .upsert({ log_date: todayIso(), supplement_name: name, taken }, { onConflict: 'log_date,supplement_name' });
+      button.disabled = false;
+
+      if (error) {
+        showToast(`Supplement save failed: ${error.message}`);
+        return;
+      }
+
+      state.todaySupplements.set(name, taken);
+      renderToday();
+      showToast(taken ? 'Supplement logged' : 'Supplement unchecked');
+    }
+
+    async function toggleTask(name, period, completed, button) {
+      button.disabled = true;
+      const { error } = await state.supabase
+        .from('task_logs')
+        .upsert({ log_date: todayIso(), task_name: name, day_period: period, completed }, { onConflict: 'log_date,task_name' });
+      button.disabled = false;
+
+      if (error) {
+        showToast(`Task save failed: ${error.message}`);
+        return;
+      }
+
+      state.todayTasks.set(name, completed);
+      renderToday();
+      showToast(completed ? 'Task complete' : 'Task reopened');
+    }
+
+    async function handleSetupSubmit(event) {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      const config = {
+        supabaseUrl: String(formData.get('supabaseUrl') || '').trim(),
+        supabaseAnonKey: String(formData.get('supabaseAnonKey') || '').trim(),
+        cycleStartDate: String(formData.get('cycleStartDate') || ''),
+        name: String(formData.get('name') || '').trim(),
+      };
+
+      saveConfig(config);
+      initClient(config);
+
+      try {
+        await fetchDashboardData();
+        setAppMode();
+        renderToday();
+        renderTodayLogForm();
+        renderInjectionList();
+        renderWorkoutList();
+        renderProgressTable();
+        showToast('Connected to Supabase');
+      } catch (error) {
+        localStorage.removeItem(STORAGE_KEY);
+        state.supabase = null;
+        state.config = config;
+        setSetupMode();
+        showToast(`Connection failed: ${error.message}`);
+      }
+    }
+
+    async function handleDailyLogSubmit(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const payload = {
+        log_date: todayIso(),
+        weight_kg: sanitizeNumber(form.weight_kg.value),
+        water_liters: sanitizeNumber(form.water_liters.value),
+        calories: sanitizeNumber(form.calories.value),
+        sleep_hours: sanitizeNumber(form.sleep_hours.value),
+        energy_level: sanitizeNumber(els.energyLevelInput.value),
+        notes: form.notes.value.trim() || null,
+      };
+
+      const { error } = await state.supabase
+        .from('daily_logs')
+        .upsert(payload, { onConflict: 'log_date' })
+        .select()
+        .single();
+
+      if (error) {
+        showToast(`Log save failed: ${error.message}`);
+        return;
+      }
+
+      await refreshAndRender();
+      showToast('Daily log saved');
+    }
+
+    async function handleWorkoutSubmit(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const payload = {
+        workout_date: todayIso(),
+        workout_name: form.workout_name.value.trim(),
+        duration_minutes: sanitizeNumber(form.duration_minutes.value),
+        performance_level: sanitizeNumber(form.performance_level.value),
+        notes: form.notes.value.trim() || null,
+      };
+
+      const { error } = await state.supabase.from('workout_logs').insert(payload);
+      if (error) {
+        showToast(`Workout save failed: ${error.message}`);
+        return;
+      }
+
+      form.reset();
+      await refreshAndRender();
+      showToast('Workout saved');
+    }
+
+    async function handleInjectionSubmit(event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const payload = {
+        injection_date: todayIso(),
+        compound: form.compound.value,
+        dose_mg: sanitizeNumber(form.dose_mg.value),
+        site: form.site.value,
+        notes: form.notes.value.trim() || null,
+      };
+
+      const { error } = await state.supabase.from('injections').insert(payload);
+      if (error) {
+        showToast(`Injection save failed: ${error.message}`);
+        return;
+      }
+
+      form.reset();
+      await refreshAndRender();
+      showToast('Injection saved');
+    }
+
+    function handleTabClick(event) {
+      const button = event.target.closest('[data-tab]');
+      if (!button) return;
+      setActiveTab(button.dataset.tab);
+    }
+
+    async function handleSettingsSubmit(event) {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      const nextConfig = {
+        ...state.config,
+        name: String(formData.get('name') || '').trim(),
+        cycleStartDate: String(formData.get('cycleStartDate') || ''),
+      };
+      saveConfig(nextConfig);
+      renderHeader();
+      renderSettings();
+      renderToday();
+      showToast('Settings saved');
+    }
+
+    function handleReset() {
+      clearConfig();
+      location.reload();
+    }
+
+    async function copySql() {
+      try {
+        await navigator.clipboard.writeText(SQL_SNIPPET);
+        showToast('SQL copied');
+      } catch {
+        showToast('Copy failed');
+      }
+    }
+
+    function bindEvents() {
+      els.setupForm.addEventListener('submit', handleSetupSubmit);
+      els.dailyLogForm.addEventListener('submit', handleDailyLogSubmit);
+      els.workoutForm.addEventListener('submit', handleWorkoutSubmit);
+      els.injectionForm.addEventListener('submit', handleInjectionSubmit);
+      els.settingsForm.addEventListener('submit', handleSettingsSubmit);
+      els.copySqlBtn.addEventListener('click', copySql);
+      els.resetAppBtn.addEventListener('click', handleReset);
+      els.bottomNav.addEventListener('click', handleTabClick);
+      window.addEventListener('resize', () => {
+        if (state.activeTab === 'progress') {
+          drawWeightChart();
+        }
+      });
+    }
+
+    async function boot() {
+      els.sqlBlock.textContent = SQL_SNIPPET;
+      bindEvents();
+      renderEnergyButtons();
+      state.config = loadConfig();
+
+      if (!state.config) {
+        setSetupMode();
+        return;
+      }
+
+      try {
+        initClient(state.config);
+        await fetchDashboardData();
+        setAppMode();
+        renderToday();
+        renderTodayLogForm();
+        renderInjectionList();
+        renderWorkoutList();
+        renderProgressTable();
+      } catch (error) {
+        clearConfig();
+        setSetupMode();
+        showToast(`Startup failed: ${error.message}`);
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>
