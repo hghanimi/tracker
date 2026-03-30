@@ -677,6 +677,18 @@
     .mirror-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 0.78rem; padding: 3px 10px; border-radius: 8px; cursor: pointer; margin-top: 6px; }
     .mirror-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+    /* ── Report modal ── */
+    .report-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.88); display: flex; flex-direction: column; padding: 16px; }
+    .report-modal.hidden { display: none; }
+    .report-modal-inner { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; display: flex; flex-direction: column; flex: 1; overflow: hidden; max-width: 480px; width: 100%; margin: 0 auto; }
+    .report-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .report-modal-header h2 { font-size: 1rem; }
+    .report-modal-actions { display: flex; gap: 8px; }
+    .report-modal-actions .btn { padding: 7px 16px; font-size: 0.85rem; }
+    .report-close-btn { background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 0 4px; }
+    .report-body { flex: 1; overflow-y: auto; padding: 14px 16px; }
+    .report-text { white-space: pre-wrap; font-family: 'Space Mono', monospace; font-size: 0.76rem; line-height: 1.65; color: var(--text); }
+
     /* ── Manual session picker ── */
     .session-picker-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
     .session-picker-row select { flex: 1; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: #181818; color: var(--text); font-size: 0.9rem; appearance: none; }
@@ -1132,9 +1144,28 @@
           <h2 style="margin-bottom: 12px;">Recent Workouts</h2>
           <div id="recent-workouts"></div>
         </div>
+        <button id="generate-report-btn" class="btn btn-primary" type="button" style="width:100%;padding:14px;font-size:1rem;">
+          Generate PT Report
+        </button>
       </section>
 
       <!-- SETTINGS TAB -->
+
+      <!-- Report modal -->
+      <div id="report-modal" class="report-modal hidden">
+        <div class="report-modal-inner">
+          <div class="report-modal-header">
+            <h2>PT Report</h2>
+            <div class="report-modal-actions">
+              <button id="report-copy-btn" class="btn btn-primary" type="button">Copy</button>
+              <button class="report-close-btn" id="report-close-btn" type="button">✕</button>
+            </div>
+          </div>
+          <div class="report-body">
+            <div id="report-text" class="report-text"></div>
+          </div>
+        </div>
+      </div>
       <section id="tab-settings" class="tab-screen hidden">
         <div class="panel">
           <h2 style="margin-bottom: 16px;">Settings</h2>
@@ -2887,6 +2918,123 @@ with check (true);`;
       }
     }
 
+    function generateReport() {
+      const meta = getCycleMeta();
+      const name = state.config.name || 'Athlete';
+      const lines = [];
+
+      const sep = (title) => {
+        lines.push('');
+        lines.push(`${'─'.repeat(40)}`);
+        lines.push(`  ${title}`);
+        lines.push(`${'─'.repeat(40)}`);
+      };
+
+      // ── Header ──
+      lines.push(`CYCLE TRACKER — PT REPORT`);
+      lines.push(`Generated: ${new Date().toLocaleString()}`);
+      lines.push(`Athlete:   ${name}`);
+      lines.push(`Cycle:     Week ${meta.week}, Day ${meta.dayNumber} of 126`);
+      lines.push(`Phase:     ${getPhase(meta.dayNumber)}`);
+
+      // ── Today's log ──
+      sep('TODAY\'S HEALTH LOG');
+      const t = state.todayLog;
+      if (t) {
+        lines.push(`Date:        ${t.log_date}`);
+        if (t.weight_kg)    lines.push(`Weight:      ${t.weight_kg} kg`);
+        if (t.sleep_hours)  lines.push(`Sleep:       ${t.sleep_hours} hrs`);
+        if (t.energy_level) lines.push(`Energy:      ${t.energy_level} / 10`);
+        if (t.water_liters) lines.push(`Water:       ${t.water_liters} L`);
+        if (t.calories)     lines.push(`Calories:    ${t.calories} kcal`);
+        if (t.protein_g)    lines.push(`Protein:     ${t.protein_g} g`);
+        if (t.carbs_g)      lines.push(`Carbs:       ${t.carbs_g} g`);
+        if (t.fat_g)        lines.push(`Fat:         ${t.fat_g} g`);
+        if (t.systolic && t.diastolic) lines.push(`Blood P:     ${t.systolic}/${t.diastolic} mmHg`);
+        if (t.side_effects?.length) lines.push(`Side FX:     ${t.side_effects.join(', ')}`);
+        if (t.notes)        lines.push(`Notes:       ${t.notes}`);
+      } else {
+        lines.push('No log for today yet.');
+      }
+
+      // ── Recent daily logs (last 14 days) ──
+      sep('RECENT DAILY LOGS (last 14 days)');
+      const recentDays = state.recentLogs.slice(0, 14);
+      if (recentDays.length) {
+        recentDays.forEach((l) => {
+          const parts = [];
+          if (l.weight_kg)    parts.push(`weight ${l.weight_kg}kg`);
+          if (l.sleep_hours)  parts.push(`sleep ${l.sleep_hours}h`);
+          if (l.energy_level) parts.push(`energy ${l.energy_level}/10`);
+          if (l.calories)     parts.push(`${l.calories}kcal`);
+          if (l.protein_g)    parts.push(`P:${l.protein_g}g`);
+          if (l.systolic)     parts.push(`BP ${l.systolic}/${l.diastolic}`);
+          if (l.side_effects?.length) parts.push(`[${l.side_effects.join('+')}]`);
+          lines.push(`${l.log_date}  ${parts.join('  ') || '(no metrics)'}`);
+          if (l.notes) lines.push(`  → ${l.notes}`);
+        });
+      } else {
+        lines.push('No recent logs.');
+      }
+
+      // ── Workouts ──
+      sep('RECENT WORKOUTS');
+      if (state.recentWorkouts.length) {
+        state.recentWorkouts.slice(0, 10).forEach((w) => {
+          lines.push(`${w.workout_date}  ${w.workout_name}${w.workout_time ? ' @ ' + w.workout_time : ''}`);
+          if (w.duration_minutes) lines.push(`  Duration:    ${w.duration_minutes} min`);
+          if (w.performance_level) lines.push(`  Performance: ${w.performance_level}/10`);
+          if (w.notes) lines.push(`  Notes:       ${w.notes}`);
+          if (w.details) {
+            const exKeys = Object.keys(w.details);
+            const PLAN = WORKOUT_PLAN[w.workout_name];
+            exKeys.forEach((k) => {
+              const sets = w.details[k];
+              const exName = PLAN?.[Number(k)]?.name || `Exercise ${Number(k) + 1}`;
+              const setSummary = sets
+                .filter((s) => s.weight || s.reps)
+                .map((s, j) => {
+                  const label = j === 0 && PLAN?.[Number(k)]?.warmup ? 'W' : `S${PLAN?.[Number(k)]?.warmup ? j : j + 1}`;
+                  return `${label}: ${s.weight || '?'}${s.unit || 'kg'}×${s.reps || '?'}`;
+                }).join('  ');
+              if (setSummary) lines.push(`  ${exName}: ${setSummary}`);
+            });
+          }
+        });
+      } else {
+        lines.push('No workouts logged yet.');
+      }
+
+      // ── Injections ──
+      sep('INJECTION LOG');
+      if (state.recentInjections.length) {
+        state.recentInjections.slice(0, 20).forEach((i) => {
+          lines.push(`${i.injection_date}  ${i.compound}  ${i.dose_mg ?? '?'}mg  ${i.site || ''}`);
+          if (i.notes) lines.push(`  → ${i.notes}`);
+        });
+      } else {
+        lines.push('No injections logged yet.');
+      }
+
+      // ── Supplements (today) ──
+      sep('SUPPLEMENTS TODAY');
+      if (state.todaySupplements.size) {
+        state.todaySupplements.forEach((taken, name) => {
+          lines.push(`${taken ? '✓' : '✗'}  ${name}`);
+        });
+      } else {
+        lines.push('No supplement data.');
+      }
+
+      lines.push('');
+      lines.push('─'.repeat(40));
+      lines.push('End of report');
+
+      const text = lines.join('\n');
+      document.getElementById('report-text').textContent = text;
+      document.getElementById('report-modal').classList.remove('hidden');
+    }
+
     function bindEvents() {
       els.setupForm.addEventListener('submit', handleSetupSubmit);
       els.dailyLogForm.addEventListener('submit', handleDailyLogSubmit);
@@ -2904,6 +3052,19 @@ with check (true);`;
 
       // Mark all supplements
       document.getElementById('mark-all-supps-btn').addEventListener('click', markAllSupplements);
+
+      // Generate PT report
+      document.getElementById('generate-report-btn').addEventListener('click', generateReport);
+      document.getElementById('report-close-btn').addEventListener('click', () => {
+        document.getElementById('report-modal').classList.add('hidden');
+      });
+      document.getElementById('report-copy-btn').addEventListener('click', async () => {
+        const text = document.getElementById('report-text').textContent;
+        await navigator.clipboard.writeText(text);
+        const btn = document.getElementById('report-copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      });
 
       // Rest timer controls
       document.getElementById('rest-skip-btn').addEventListener('click', stopRestTimer);
