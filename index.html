@@ -926,6 +926,10 @@
               <input id="wf-name" name="workout_name" type="hidden">
             </div>
             <div class="field">
+              <label for="wf-time">Start Time</label>
+              <input id="wf-time" name="workout_time" type="time">
+            </div>
+            <div class="field">
               <label>Duration</label>
               <div id="wf-timer-display" class="timer-display inactive">Not started</div>
               <div class="timer-controls">
@@ -1286,6 +1290,7 @@ create table if not exists public.workout_logs (
 
 -- If the table already exists, add missing columns and constraints:
 alter table public.workout_logs add column if not exists details jsonb;
+alter table public.workout_logs add column if not exists workout_time text;
 create unique index if not exists workout_logs_date_name_idx
   on public.workout_logs (workout_date, workout_name);
 
@@ -1654,6 +1659,12 @@ with check (true);`;
     function startWorkoutTimer() {
       if (state.workoutTimer.intervalId) return; // already running
       state.workoutTimer.startTime = Date.now();
+      // Auto-fill start time if not already set
+      const timeInput = document.getElementById('wf-time');
+      if (timeInput && !timeInput.value) {
+        const now = new Date();
+        timeInput.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      }
       const display = document.getElementById('wf-timer-display');
       const startBtn = document.getElementById('wf-start-btn');
       const endBtn = document.getElementById('wf-end-btn');
@@ -1799,20 +1810,26 @@ with check (true);`;
       labelCol.innerHTML = '<div style="height:18px;"></div>' + DOW_LABELS.map((d) => `<div class="heatmap-dow">${d}</div>`).join('');
       container.appendChild(labelCol);
 
+      // Use local date arithmetic to avoid UTC timezone shift
+      const startY = start.getFullYear();
+      const startM = start.getMonth();
+      const startD = start.getDate();
+
       for (let w = 0; w < 18; w++) {
         const col = document.createElement('div');
         col.className = 'heatmap-col';
         col.innerHTML = `<div class="heatmap-week-lbl">W${w + 1}</div>`;
-        // Mon–Sun order
         for (let d = 0; d < 7; d++) {
           const dayOffset = w * 7 + d;
-          const cellDate = new Date(start);
-          cellDate.setDate(start.getDate() + dayOffset);
-          const cellStr = cellDate.toISOString().slice(0, 10);
+          const cellDate = new Date(startY, startM, startD + dayOffset);
+          const y = cellDate.getFullYear();
+          const m = String(cellDate.getMonth() + 1).padStart(2, '0');
+          const day = String(cellDate.getDate()).padStart(2, '0');
+          const cellStr = `${y}-${m}-${day}`;
           const cell = document.createElement('div');
           cell.className = 'heatmap-cell';
           if (cellStr === todayStr) cell.classList.add('today');
-          else if (cellStr < todayStr) cell.classList.add(loggedDates.has(cellStr) ? 'logged' : '');
+          else if (cellStr < todayStr) { if (loggedDates.has(cellStr)) cell.classList.add('logged'); }
           else cell.classList.add('future');
           cell.title = cellStr;
           col.appendChild(cell);
@@ -2294,18 +2311,21 @@ with check (true);`;
         kgBtn.addEventListener('click', () => applyUnit('kg'));
         lbBtn.addEventListener('click', () => applyUnit('lb'));
 
-        // Mirror first set to all other sets
+        // Mirror first WORK set (skip warmup) to all remaining work sets
         card.querySelector('.mirror-btn').addEventListener('click', () => {
-          const rows = card.querySelectorAll('.set-row');
+          const rows = Array.from(card.querySelectorAll('.set-row'));
           if (rows.length < 2) return;
-          const firstInputs = rows[0].querySelectorAll('input');
-          const firstWeight = firstInputs[0]?.value;
-          const firstReps = firstInputs[1]?.value;
-          rows.forEach((row, idx) => {
-            if (idx === 0) return;
+          // Find first work set (label is S1, not W)
+          const workRows = rows.filter((r) => r.querySelector('.set-label')?.textContent !== 'W');
+          if (workRows.length < 2) return;
+          const srcInputs = workRows[0].querySelectorAll('input');
+          const srcWeight = srcInputs[0]?.value;
+          const srcReps = srcInputs[1]?.value;
+          if (!srcWeight && !srcReps) { showToast('Fill in the first set first'); return; }
+          workRows.slice(1).forEach((row) => {
             const inputs = row.querySelectorAll('input');
-            if (firstWeight) inputs[0].value = firstWeight;
-            if (firstReps) inputs[1].value = firstReps;
+            if (srcWeight) inputs[0].value = srcWeight;
+            if (srcReps) inputs[1].value = srcReps;
           });
         });
 
@@ -2488,8 +2508,8 @@ with check (true);`;
         item.className = 'list-item';
         item.innerHTML = `
           <strong>${entry.workout_name}</strong>
-          <span class="muted">${formatShortDate(entry.workout_date)} \u00b7 ${entry.duration_minutes ?? '-'} min \u00b7 ${entry.performance_level ?? '-'} / 10</span>
-          <span>${entry.notes || 'No notes'}</span>
+          <span class="muted">${formatShortDate(entry.workout_date)}${entry.workout_time ? ' \u00b7 ' + entry.workout_time : ''} \u00b7 ${entry.duration_minutes ?? '-'} min \u00b7 ${entry.performance_level ?? '-'} / 10</span>
+          <span>${entry.notes || ''}</span>
         `;
         els.recentWorkouts.appendChild(item);
       });
@@ -2750,6 +2770,7 @@ with check (true);`;
       const payload = {
         workout_date: todayIso(),
         workout_name: name,
+        workout_time: form.workout_time.value || null,
         duration_minutes: sanitizeNumber(form.duration_minutes.value),
         performance_level: sanitizeNumber(form.performance_level.value),
         notes: form.notes.value.trim() || null,
