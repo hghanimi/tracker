@@ -508,13 +508,13 @@
 
     .tab-row {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
     }
 
     .tab-btn {
-      padding: 10px 6px;
-      font-size: 0.74rem;
+      padding: 10px 4px;
+      font-size: 0.68rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.06em;
@@ -544,6 +544,73 @@
     .danger-text {
       color: #fca5a5;
       font-size: 0.92rem;
+    }
+
+    .exercise-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .exercise-card.is-done {
+      border-color: rgba(34, 197, 94, 0.4);
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .exercise-name {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .exercise-sets {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .set-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+
+    .set-row:last-child {
+      border-bottom: none;
+    }
+
+    .set-label {
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+    }
+
+    .rest-day-msg {
+      text-align: center;
+      padding: 32px 16px;
+    }
+
+    .rest-day-msg h2 {
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+    }
+
+    .session-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid rgba(34, 197, 94, 0.3);
     }
 
     canvas {
@@ -675,6 +742,21 @@
             <span id="supplement-count" class="muted"></span>
           </div>
           <div id="supplement-list" class="supplement-list"></div>
+        </div>
+      </section>
+
+      <section id="tab-workout" class="tab-screen hidden">
+        <div id="workout-rest-msg" class="panel rest-day-msg hidden">
+          <h2 id="workout-rest-title">Rest Day</h2>
+          <p id="workout-rest-detail" class="muted"></p>
+        </div>
+        <div id="workout-session-panel" class="panel hidden">
+          <div class="section-head">
+            <h2 id="workout-session-title">-</h2>
+            <span id="workout-session-badge" class="session-badge">-</span>
+          </div>
+          <p id="workout-session-note" class="muted" style="margin-bottom: 12px;"></p>
+          <div id="workout-exercise-list" class="task-list"></div>
         </div>
       </section>
 
@@ -851,6 +933,7 @@
   <nav id="bottom-nav" class="bottom-nav hidden">
     <div class="tab-row">
       <button class="tab-btn active" data-tab="today" type="button">Today</button>
+      <button class="tab-btn" data-tab="workout" type="button">Train</button>
       <button class="tab-btn" data-tab="log" type="button">Log</button>
       <button class="tab-btn" data-tab="inject" type="button">Inject</button>
       <button class="tab-btn" data-tab="progress" type="button">Progress</button>
@@ -876,6 +959,30 @@
       cycleStartDate: DEFAULT_CYCLE_START_DATE,
       name: DEFAULT_NAME,
     };
+    const WORKOUT_PLAN = {
+      'Push A': [
+        { name: 'Barbell Bench Press', warmup: '1 × 12-15 light', sets: 4, reps: '8-10' },
+        { name: 'Overhead Press', warmup: '1 × 12-15 light', sets: 4, reps: '8-10' },
+        { name: 'Incline Dumbbell Press', warmup: '1 × 12-15 light', sets: 4, reps: '10-12' },
+        { name: 'Lateral Raises', warmup: null, sets: 4, reps: '12-15' },
+        { name: 'Tricep Pushdown', warmup: null, sets: 4, reps: '10-12' },
+      ],
+      'Pull B': [
+        { name: 'Deadlift', warmup: '1 × 8-10 light', sets: 4, reps: '5-8' },
+        { name: 'Barbell / Cable Row', warmup: '1 × 12-15 light', sets: 4, reps: '8-10' },
+        { name: 'Lat Pulldown / Pull-up', warmup: null, sets: 4, reps: '8-12' },
+        { name: 'Face Pulls', warmup: null, sets: 4, reps: '15-20' },
+        { name: 'Barbell / Dumbbell Curl', warmup: null, sets: 4, reps: '10-12' },
+      ],
+      'Legs C': [
+        { name: 'Barbell Back Squat', warmup: '1 × 10-12 light', sets: 4, reps: '6-8' },
+        { name: 'Romanian Deadlift', warmup: '1 × 10-12 light', sets: 4, reps: '8-10' },
+        { name: 'Leg Press', warmup: null, sets: 4, reps: '10-12' },
+        { name: 'Walking Lunges', warmup: null, sets: 4, reps: '12 each leg' },
+        { name: 'Plank', warmup: null, sets: 3, reps: '45-60s hold' },
+      ],
+    };
+
     const SQL_SNIPPET = `create extension if not exists pgcrypto;
 
 create table if not exists public.daily_logs (
@@ -1036,6 +1143,14 @@ with check (true);`;
       settingsSupabaseUrl: document.getElementById('settings-supabase-url'),
       resetAppBtn: document.getElementById('reset-app-btn'),
       toastStack: document.getElementById('toast-stack'),
+      workoutRestMsg: document.getElementById('workout-rest-msg'),
+      workoutRestTitle: document.getElementById('workout-rest-title'),
+      workoutRestDetail: document.getElementById('workout-rest-detail'),
+      workoutSessionPanel: document.getElementById('workout-session-panel'),
+      workoutSessionTitle: document.getElementById('workout-session-title'),
+      workoutSessionBadge: document.getElementById('workout-session-badge'),
+      workoutSessionNote: document.getElementById('workout-session-note'),
+      workoutExerciseList: document.getElementById('workout-exercise-list'),
       tabButtons: Array.from(document.querySelectorAll('.tab-btn')),
       tabScreens: Array.from(document.querySelectorAll('.tab-screen')),
     };
@@ -1208,7 +1323,8 @@ with check (true);`;
       const isHCGDay = week >= 13 && week <= 14 && (meta.cappedDay - 85) % 2 === 0;
       const isWinstrol = week >= 1 && week <= 4;
       const isPCT = week >= 15;
-      const workoutNames = { 1: 'Push', 2: 'Pull', 3: 'Legs', 4: 'Push', 5: 'Pull', 6: 'Legs' };
+      const workoutNames = { 0: 'Pull B', 3: 'Push A', 4: 'Pull B', 6: 'Push A', 1: 'Legs C' };
+      const cardioMorning = [0, 2, 4].includes(dow);
       const todayWorkout = workoutNames[dow] || null;
 
       const amSupps = ['NAC 600mg', 'Omega-3 2g'];
@@ -1229,26 +1345,30 @@ with check (true);`;
       }
 
       const tasks = [];
-      tasks.push({ time: '07:00', name: 'Wake up & weigh in', detail: 'Step on scale, log weight and how you feel', mode: 'auto', completed: Boolean(state.todayLog) });
+      tasks.push({ time: '07:00', name: 'Wake up & weigh in', detail: 'Step on scale, log weight and how you feel', mode: 'manual', completed: state.todayTasks.get('Wake up & weigh in') === true });
       tasks.push({ time: '07:30', name: 'Breakfast + AM supplements', detail: amSupps.join(', '), mode: 'manual', completed: state.todayTasks.get('Breakfast + AM supplements') === true });
 
       if (isInjDay) {
         const site = getInjectionSite(date) || 'assigned site';
-        tasks.push({ time: '08:00', name: 'Inject Test Cyp + Mast E', detail: '250mg Test Cyp + 200mg Mast E \u2192 ' + site, mode: 'auto', completed: state.todayInjectionCount > 0 });
+        tasks.push({ time: '08:00', name: 'Inject Test Cyp + Mast E', detail: '250mg Test Cyp + 200mg Mast E \u2192 ' + site, mode: 'manual', completed: state.todayTasks.get('Inject Test Cyp + Mast E') === true });
       }
       if (isHCGDay) {
-        tasks.push({ time: '08:00', name: 'HCG injection', detail: 'HCG 2500iu subcutaneous', mode: 'auto', completed: state.todayInjectionCount > 0 });
+        tasks.push({ time: '08:00', name: 'HCG injection', detail: 'HCG 2500iu subcutaneous', mode: 'manual', completed: state.todayTasks.get('HCG injection') === true });
+      }
+
+      if (cardioMorning) {
+        tasks.push({ time: '09:00', name: 'Morning cardio', detail: '30 min walk or light cardio', mode: 'manual', completed: state.todayTasks.get('Morning cardio') === true });
       }
 
       tasks.push({ time: '10:00', name: 'Hydration check', detail: '1L+ water by now, keep sipping', mode: 'manual', completed: state.todayTasks.get('Hydration check') === true });
       tasks.push({ time: '12:30', name: 'Meal 2', detail: 'Lunch \u2013 hit your protein and calorie targets', mode: 'manual', completed: state.todayTasks.get('Meal 2') === true });
 
       if (todayWorkout) {
-        tasks.push({ time: '15:30', name: 'Pre-workout meal', detail: 'Light carbs + protein 30\u201360 min before training', mode: 'manual', completed: state.todayTasks.get('Pre-workout meal') === true });
-        tasks.push({ time: '16:00', name: 'Workout \u2013 ' + todayWorkout, detail: 'Log session when done', mode: 'auto', completed: state.todayWorkoutCount > 0 });
+        tasks.push({ time: '17:30', name: 'Pre-workout + ABE', detail: 'Light carbs + protein, ABE 15 min before', mode: 'manual', completed: state.todayTasks.get('Pre-workout + ABE') === true });
+        tasks.push({ time: '18:00', name: todayWorkout + ' session', detail: 'Open Train tab for exercises \u2013 log when done', mode: 'manual', completed: state.todayTasks.get(todayWorkout + ' session') === true });
       }
 
-      tasks.push({ time: '18:00', name: 'Evening meal', detail: todayWorkout ? 'Post-workout: high protein, replenish glycogen' : 'Meal 3 \u2013 hit your targets', mode: 'manual', completed: state.todayTasks.get('Evening meal') === true });
+      tasks.push({ time: '19:30', name: 'Evening meal', detail: todayWorkout ? 'Post-workout: high protein, replenish glycogen' : 'Meal 3 \u2013 hit your targets', mode: 'manual', completed: state.todayTasks.get('Evening meal') === true });
       tasks.push({ time: '20:00', name: 'Meal 4 + PM supplements', detail: pmSupps.join(', '), mode: 'manual', completed: state.todayTasks.get('Meal 4 + PM supplements') === true });
       tasks.push({ time: '22:00', name: 'Review & wind down', detail: 'Update notes, prep for sleep \u2013 aim for 7-8 hrs', mode: 'manual', completed: state.todayTasks.get('Review & wind down') === true });
 
@@ -1296,6 +1416,9 @@ with check (true);`;
       });
       if (tab === 'progress') {
         drawWeightChart();
+      }
+      if (tab === 'workout') {
+        renderWorkoutTab();
       }
     }
 
@@ -1402,7 +1525,6 @@ with check (true);`;
         if (task.completed) cls += ' is-complete';
         if (isNow) cls += ' is-now';
         if (isPast && !task.completed) cls += ' is-past';
-        if (task.mode === 'auto') cls += ' is-auto';
         button.className = cls;
 
         const statusLabel = task.completed ? 'Done' : isNow ? 'Now' : isPast ? 'Missed' : 'Upcoming';
@@ -1414,17 +1536,13 @@ with check (true);`;
             <span class="muted">${task.detail}</span>
             <span class="task-meta">
               <span class="tag ${task.completed ? 'is-accent' : isNow ? 'is-accent' : ''}">${statusLabel}</span>
-              <span>${task.mode === 'auto' ? 'tracked from logs' : 'tap to toggle'}</span>
+              <span>tap to toggle</span>
             </span>
           </span>
           <span class="checkbox-status">${task.completed ? '\u2713' : ''}</span>
         `;
 
-        if (task.mode === 'manual') {
-          button.addEventListener('click', () => toggleTask(task.name, task.time, !task.completed, button));
-        } else {
-          button.disabled = true;
-        }
+        button.addEventListener('click', () => toggleTask(task.name, task.time, !task.completed, button));
         els.scheduleTaskList.appendChild(button);
       });
 
@@ -1455,6 +1573,50 @@ with check (true);`;
         `;
         button.addEventListener('click', () => toggleSupplement(supplement.name, !checked, button));
         els.supplementList.appendChild(button);
+      });
+    }
+
+    function renderWorkoutTab() {
+      const dow = new Date().getDay();
+      const workoutNames = { 0: 'Pull B', 3: 'Push A', 4: 'Pull B', 6: 'Push A', 1: 'Legs C' };
+      const session = workoutNames[dow] || null;
+      const exercises = session ? WORKOUT_PLAN[session] : null;
+
+      if (!exercises) {
+        els.workoutRestMsg.classList.remove('hidden');
+        els.workoutSessionPanel.classList.add('hidden');
+        const cardioMorning = [0, 2, 4].includes(dow);
+        els.workoutRestTitle.textContent = cardioMorning ? 'Active Recovery' : 'Rest Day';
+        els.workoutRestDetail.textContent = cardioMorning
+          ? 'No weights today. Morning cardio walk is on your schedule.'
+          : 'Full rest day. Focus on nutrition, hydration, and sleep.';
+        return;
+      }
+
+      els.workoutRestMsg.classList.add('hidden');
+      els.workoutSessionPanel.classList.remove('hidden');
+      els.workoutSessionTitle.textContent = session;
+      els.workoutSessionBadge.textContent = `5 exercises · ${session.split(' ')[0]}`;
+      els.workoutSessionNote.textContent = '1-2 RIR per set · 500ml water · ABE 15 min before';
+
+      els.workoutExerciseList.innerHTML = '';
+      exercises.forEach((ex, i) => {
+        const card = document.createElement('div');
+        card.className = 'exercise-card';
+
+        let setsHtml = '';
+        if (ex.warmup) {
+          setsHtml += `<div class="set-row"><span class="set-label">W</span><span>${ex.warmup}</span></div>`;
+        }
+        for (let s = 1; s <= ex.sets; s++) {
+          setsHtml += `<div class="set-row"><span class="set-label">S${s}</span><span>___kg × ${ex.reps}</span></div>`;
+        }
+
+        card.innerHTML = `
+          <div class="exercise-name">${i + 1}. ${ex.name}</div>
+          <div class="exercise-sets">${setsHtml}</div>
+        `;
+        els.workoutExerciseList.appendChild(card);
       });
     }
 
@@ -1650,6 +1812,7 @@ with check (true);`;
       await fetchDashboardData();
       renderHeader();
       renderToday();
+      renderWorkoutTab();
       renderTodayLogForm();
       renderInjectionList();
       renderWorkoutList();
