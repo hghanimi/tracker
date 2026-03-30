@@ -1844,14 +1844,14 @@ with check (true);`;
           if (isInjDay) {
             const dot = document.createElement('div');
             dot.className = 'inj-dot';
-            if (isToday) {
-              dot.classList.add('today');
-              dot.textContent = '●';
-            } else if (isFuture) {
-              dot.classList.add('future');
-            } else if (injectedDates.has(cellStr)) {
+            if (injectedDates.has(cellStr)) {
               dot.classList.add('injected');
               dot.textContent = '✓';
+            } else if (isFuture) {
+              dot.classList.add('future');
+            } else if (isToday) {
+              dot.classList.add('today');
+              dot.textContent = '●';
             } else {
               dot.classList.add('missed');
               dot.textContent = '✕';
