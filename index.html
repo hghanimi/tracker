@@ -2313,7 +2313,6 @@ with check (true);`;
             workout_date: todayIso(),
             workout_name: session,
             details,
-            notes: JSON.stringify(details),
           }, { onConflict: 'workout_date,workout_name' });
         if (error) showToast('Save failed: ' + error.message);
         else showToast('Workout saved!');
@@ -2637,23 +2636,27 @@ with check (true);`;
     async function handleWorkoutSubmit(event) {
       event.preventDefault();
       const form = event.currentTarget;
+      const name = form.workout_name.value.trim();
+      if (!name) { showToast('No session selected'); return; }
       const payload = {
         workout_date: todayIso(),
-        workout_name: form.workout_name.value.trim(),
+        workout_name: name,
         duration_minutes: sanitizeNumber(form.duration_minutes.value),
         performance_level: sanitizeNumber(form.performance_level.value),
         notes: form.notes.value.trim() || null,
       };
 
-      const { error } = await state.supabase.from('workout_logs').insert(payload);
+      // upsert so it merges with existing details saved by the exercise set save button
+      const { error } = await state.supabase
+        .from('workout_logs')
+        .upsert(payload, { onConflict: 'workout_date,workout_name' });
       if (error) {
-        showToast(`Workout save failed: ${error.message}`);
+        showToast(`Stats save failed: ${error.message}`);
         return;
       }
 
-      form.reset();
       await refreshAndRender();
-      showToast('Workout saved');
+      showToast('Stats saved');
     }
 
     async function handleInjectionSubmit(event) {
