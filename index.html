@@ -492,6 +492,63 @@
       font-weight: 700;
     }
     canvas { display: block; }
+
+    /* ── Workout timer ── */
+    .timer-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-align: center;
+      padding: 10px 0 6px;
+      letter-spacing: 0.06em;
+    }
+    .timer-display.inactive { color: var(--muted); font-size: 0.95rem; font-weight: 400; padding: 6px 0; }
+    .timer-running { color: var(--accent); animation: timer-pulse 2s ease-in-out infinite; }
+    @keyframes timer-pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.65; }
+    }
+    .timer-controls { display: flex; gap: 10px; }
+    .timer-controls .btn { flex: 1; }
+
+    /* ── Per-exercise unit toggle ── */
+    .exercise-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .exercise-header .exercise-name { margin-bottom: 0; flex: 1; }
+    .unit-toggle { display: flex; gap: 3px; }
+    .unit-btn {
+      padding: 2px 9px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'Space Mono', monospace;
+    }
+    .unit-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(34, 197, 94, 0.3);
+      font-weight: 700;
+    }
+
+    /* ── Session display (read-only) ── */
+    .session-display {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #181818;
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -628,16 +685,22 @@
           <p id="workout-session-note" class="muted" style="margin-bottom: 12px;"></p>
           <div id="workout-exercise-list" class="task-list"></div>
         </div>
-        <div class="panel">
+        <div id="workout-stats-panel" class="panel">
           <div class="section-head"><h2>Log Stats</h2></div>
           <form id="workout-form" class="form-grid" autocomplete="off">
             <div class="field">
-              <label for="wf-name">Session</label>
-              <input id="wf-name" name="workout_name" type="text" placeholder="e.g. Push A">
+              <label>Session</label>
+              <div id="wf-session-display" class="session-display">-</div>
+              <input id="wf-name" name="workout_name" type="hidden">
             </div>
             <div class="field">
-              <label for="wf-duration">Duration (min)</label>
-              <input id="wf-duration" name="duration_minutes" type="number" min="0">
+              <label>Duration</label>
+              <div id="wf-timer-display" class="timer-display inactive">Not started</div>
+              <div class="timer-controls">
+                <button id="wf-start-btn" type="button" class="btn btn-primary">Start Workout</button>
+                <button id="wf-end-btn" type="button" class="btn" style="display:none;">End Workout</button>
+              </div>
+              <input id="wf-duration" name="duration_minutes" type="number" style="display:none;">
             </div>
             <div class="field">
               <label for="wf-perf">Performance (1–10)</label>
@@ -956,6 +1019,8 @@ with check (true);`;
       todayTasks: new Map(),
       energyLevel: null,
       loading: false,
+      exerciseUnits: [],
+      workoutTimer: { startTime: null, intervalId: null },
     };
 
     const els = {
@@ -1243,6 +1308,47 @@ with check (true);`;
       }, 2000);
     }
 
+    function startWorkoutTimer() {
+      if (state.workoutTimer.intervalId) return; // already running
+      state.workoutTimer.startTime = Date.now();
+      const display = document.getElementById('wf-timer-display');
+      const startBtn = document.getElementById('wf-start-btn');
+      const endBtn = document.getElementById('wf-end-btn');
+      startBtn.style.display = 'none';
+      endBtn.style.display = '';
+      display.classList.remove('inactive');
+      display.classList.add('timer-running');
+      state.workoutTimer.intervalId = setInterval(() => {
+        const elapsed = Date.now() - state.workoutTimer.startTime;
+        const totalSecs = Math.floor(elapsed / 1000);
+        const hrs = Math.floor(totalSecs / 3600);
+        const mins = Math.floor((totalSecs % 3600) / 60);
+        const secs = totalSecs % 60;
+        display.textContent = hrs > 0
+          ? `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+          : `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function endWorkoutTimer() {
+      if (!state.workoutTimer.startTime) return;
+      clearInterval(state.workoutTimer.intervalId);
+      state.workoutTimer.intervalId = null;
+      const elapsed = Date.now() - state.workoutTimer.startTime;
+      const durationMinutes = Math.max(1, Math.round(elapsed / 60000));
+      const display = document.getElementById('wf-timer-display');
+      const startBtn = document.getElementById('wf-start-btn');
+      const endBtn = document.getElementById('wf-end-btn');
+      const durationInput = document.getElementById('wf-duration');
+      endBtn.style.display = 'none';
+      startBtn.textContent = 'Restart';
+      startBtn.style.display = '';
+      display.classList.remove('timer-running');
+      display.textContent = `${durationMinutes} min`;
+      durationInput.value = durationMinutes;
+      state.workoutTimer.startTime = null;
+    }
+
     function setSetupMode() {
       els.setupScreen.classList.remove('hidden');
       els.appScreen.classList.add('hidden');
@@ -1439,29 +1545,12 @@ with check (true);`;
       const workoutNames = { 0: 'Pull B', 3: 'Push A', 4: 'Pull B', 6: 'Push A', 1: 'Legs C' };
       const session = workoutNames[dow] || null;
       const exercises = session ? WORKOUT_PLAN[session] : null;
-
-      // KG/lb toggle row (always visible if workout day)
-      let unitRow = document.getElementById('workout-unit-row');
-      if (!unitRow) {
-        unitRow = document.createElement('div');
-        unitRow.id = 'workout-unit-row';
-        unitRow.style.display = 'flex';
-        unitRow.style.justifyContent = 'flex-end';
-        unitRow.style.alignItems = 'center';
-        unitRow.style.gap = '10px';
-        unitRow.style.marginBottom = '10px';
-        els.workoutSessionPanel.insertBefore(unitRow, els.workoutSessionPanel.firstChild);
-      }
-      let unit = window.localStorage.getItem('workoutUnit') || 'kg';
-      unitRow.innerHTML = `<label style="font-size:0.98em;">Unit:</label>
-        <button id="unit-kg" type="button" class="btn" style="padding:4px 14px;${unit !== 'lb' ? 'background:var(--accent);color:#051107;' : ''}">kg</button>
-        <button id="unit-lb" type="button" class="btn" style="padding:4px 14px;${unit === 'lb' ? 'background:var(--accent);color:#051107;' : ''}">lb</button>`;
-      document.getElementById('unit-kg').onclick = () => { window.localStorage.setItem('workoutUnit', 'kg'); renderWorkoutTab(); };
-      document.getElementById('unit-lb').onclick = () => { window.localStorage.setItem('workoutUnit', 'lb'); renderWorkoutTab(); };
+      const statsPanel = document.getElementById('workout-stats-panel');
 
       if (!exercises) {
         els.workoutRestMsg.classList.remove('hidden');
         els.workoutSessionPanel.classList.add('hidden');
+        statsPanel.classList.add('hidden');
         const cardioMorning = [0, 2, 4].includes(dow);
         els.workoutRestTitle.textContent = cardioMorning ? 'Active Recovery' : 'Rest Day';
         els.workoutRestDetail.textContent = cardioMorning
@@ -1472,14 +1561,19 @@ with check (true);`;
 
       els.workoutRestMsg.classList.add('hidden');
       els.workoutSessionPanel.classList.remove('hidden');
+      statsPanel.classList.remove('hidden');
       els.workoutSessionTitle.textContent = session;
       els.workoutSessionBadge.textContent = `5 exercises \u00b7 ${session.split(' ')[0]}`;
       els.workoutSessionNote.textContent = '1-2 RIR per set \u00b7 500ml water \u00b7 ABE 15 min before';
 
+      // Auto-fill session in Log Stats form
+      document.getElementById('wf-session-display').textContent = session;
+      document.getElementById('wf-name').value = session;
+
       // Load any saved details for today
       let savedDetails = {};
       try {
-        const { data, error } = await state.supabase
+        const { data } = await state.supabase
           .from('workout_logs')
           .select('details')
           .eq('workout_date', todayIso())
@@ -1491,9 +1585,16 @@ with check (true);`;
         }
       } catch {}
 
+      // Initialise per-exercise unit state (preserve existing choices across re-renders)
+      if (state.exerciseUnits.length !== exercises.length) {
+        state.exerciseUnits = exercises.map(() => 'kg');
+      }
+
       els.workoutExerciseList.innerHTML = '';
       const inputRefs = [];
+
       exercises.forEach((ex, i) => {
+        const unit = state.exerciseUnits[i] || 'kg';
         const card = document.createElement('div');
         card.className = 'exercise-card';
 
@@ -1508,16 +1609,37 @@ with check (true);`;
           const reps = (savedDetails?.[i]?.[s] && savedDetails[i][s].reps) || '';
           setsHtml += `<div class="set-row"><span class="set-label">S${s}</span><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> × <input type="text" placeholder="reps" style="width:60px" value="${reps}"></div>`;
         }
+
         card.innerHTML = `
-          <div class="exercise-name">${i + 1}. ${ex.name}</div>
+          <div class="exercise-header">
+            <div class="exercise-name">${i + 1}. ${ex.name}</div>
+            <div class="unit-toggle">
+              <button type="button" class="unit-btn${unit === 'kg' ? ' active' : ''}" data-unit="kg">kg</button>
+              <button type="button" class="unit-btn${unit === 'lb' ? ' active' : ''}" data-unit="lb">lb</button>
+            </div>
+          </div>
           <div class="exercise-sets">${setsHtml}</div>
         `;
+
+        // Per-exercise unit toggle — updates placeholders without re-rendering
+        const kgBtn = card.querySelector('[data-unit="kg"]');
+        const lbBtn = card.querySelector('[data-unit="lb"]');
+        const weightInputs = card.querySelectorAll('input[type="number"]');
+        const applyUnit = (newUnit) => {
+          state.exerciseUnits[i] = newUnit;
+          kgBtn.classList.toggle('active', newUnit === 'kg');
+          lbBtn.classList.toggle('active', newUnit === 'lb');
+          weightInputs.forEach((inp) => { inp.placeholder = newUnit; });
+        };
+        kgBtn.addEventListener('click', () => applyUnit('kg'));
+        lbBtn.addEventListener('click', () => applyUnit('lb'));
+
         const setInputs = Array.from(card.querySelectorAll('input'));
         inputRefs.push(setInputs);
         els.workoutExerciseList.appendChild(card);
       });
 
-      // Add Save button (always at bottom, sticky)
+      // Save sets/reps button
       let saveBtn = document.getElementById('save-workout-btn');
       if (!saveBtn) {
         saveBtn = document.createElement('button');
@@ -1535,16 +1657,17 @@ with check (true);`;
       saveBtn.onclick = async (e) => {
         e.preventDefault();
         const details = {};
-        const currentUnit = window.localStorage.getItem('workoutUnit') || 'kg';
         inputRefs.forEach((setInputs, i) => {
           details[i] = [];
+          const exUnit = state.exerciseUnits[i] || 'kg';
           for (let j = 0; j < setInputs.length; j += 2) {
             let weight = setInputs[j].value;
             const reps = setInputs[j + 1].value;
-            if (weight && currentUnit === 'lb') {
+            // Always store in kg
+            if (weight && exUnit === 'lb') {
               weight = (parseFloat(weight) * 0.453592).toFixed(1);
             }
-            details[i].push({ weight, reps });
+            details[i].push({ weight, reps, unit: exUnit });
           }
         });
         const { error } = await state.supabase
@@ -1557,8 +1680,6 @@ with check (true);`;
           }, { onConflict: 'workout_date,workout_name' });
         if (error) showToast('Save failed: ' + error.message);
         else showToast('Workout saved!');
-        window.localStorage.setItem('workoutUnit', 'kg');
-        renderWorkoutTab();
       };
     }
 
@@ -1946,6 +2067,8 @@ with check (true);`;
       els.settingsForm.addEventListener('submit', handleSettingsSubmit);
       els.copySqlBtn.addEventListener('click', copySql);
       els.resetAppBtn.addEventListener('click', handleReset);
+      document.getElementById('wf-start-btn').addEventListener('click', startWorkoutTimer);
+      document.getElementById('wf-end-btn').addEventListener('click', endWorkoutTimer);
       els.bottomNav.addEventListener('click', handleTabClick);
       window.addEventListener('resize', () => {
         if (state.activeTab === 'progress') {
