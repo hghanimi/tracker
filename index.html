@@ -627,19 +627,24 @@
     }
     .effect-btn.active { background: rgba(220,38,38,0.15); border-color: rgba(220,38,38,0.4); color: #fca5a5; }
 
-    /* ── Compliance heatmap ── */
-    .heatmap-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
-    .heatmap { display: flex; gap: 3px; }
-    .heatmap-labels { display: flex; flex-direction: column; gap: 3px; padding-top: 22px; flex-shrink: 0; }
-    .heatmap-dow { height: 14px; font-size: 0.58rem; color: var(--muted); display: flex; align-items: center; padding-right: 4px; }
-    .heatmap-col { display: flex; flex-direction: column; gap: 3px; }
-    .heatmap-week-lbl { font-size: 0.58rem; color: var(--muted); height: 18px; display: flex; align-items: center; justify-content: center; }
-    .heatmap-cell { width: 14px; height: 14px; border-radius: 2px; background: #1a1a1a; flex-shrink: 0; cursor: default; }
-    .heatmap-cell.logged { background: #16a34a; }
-    .heatmap-cell.today  { background: var(--accent); box-shadow: 0 0 0 1px rgba(255,255,255,0.15); }
-    .heatmap-cell.future { background: #111; }
-    .heatmap-legend { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 0.72rem; color: var(--muted); }
-    .legend-cell { width: 12px; height: 12px; border-radius: 2px; }
+    /* ── Cycle compliance grid ── */
+    .cycle-grid { width: 100%; display: flex; flex-direction: column; gap: 2px; }
+    .cycle-header-row { display: flex; align-items: center; padding: 0 0 6px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .cycle-row { display: flex; align-items: center; border-radius: 8px; padding: 2px 4px; transition: background 0.1s; }
+    .cycle-row.current-week { background: rgba(255,255,255,0.04); }
+    .cycle-week-lbl { font-size: 0.68rem; color: var(--muted); width: 28px; flex-shrink: 0; font-family: 'Space Mono', monospace; }
+    .cycle-week-lbl.active { color: var(--accent); font-weight: 700; }
+    .cycle-day { flex: 1; display: flex; align-items: center; justify-content: center; height: 30px; }
+    .cycle-day-hdr { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; color: var(--muted); }
+    .inj-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; }
+    .inj-dot.future  { background: #1a1a1a; border: 1.5px solid #2a2a2a; }
+    .inj-dot.injected { background: #15803d; color: #fff; }
+    .inj-dot.missed  { background: rgba(220,38,38,0.18); border: 1.5px solid #dc2626; color: #fca5a5; }
+    .inj-dot.today   { background: transparent; border: 2px solid #ef4444; color: #ef4444; }
+    .today-pip { width: 5px; height: 5px; border-radius: 50%; background: #ef4444; }
+    .cycle-legend { display: flex; align-items: center; gap: 14px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+    .cycle-legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: var(--muted); }
+    .cycle-legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 
     /* ── Exercise strength chart ── */
     .exercise-selector {
@@ -1069,14 +1074,13 @@
       <!-- PROGRESS TAB -->
       <section id="tab-progress" class="tab-screen hidden">
         <div class="panel">
-          <h2 style="margin-bottom: 12px;">Cycle Compliance</h2>
-          <div class="heatmap-scroll">
-            <div class="heatmap" id="compliance-heatmap"></div>
-          </div>
-          <div class="heatmap-legend">
-            <div class="legend-cell" style="background:#16a34a;"></div><span>Logged</span>
-            <div class="legend-cell" style="background:var(--accent);margin-left:8px;"></div><span>Today</span>
-            <div class="legend-cell" style="background:#1a1a1a;margin-left:8px;"></div><span>Missed</span>
+          <h2 style="margin-bottom: 14px;">Injection Compliance</h2>
+          <div id="compliance-heatmap" class="cycle-grid"></div>
+          <div class="cycle-legend">
+            <div class="cycle-legend-item"><div class="cycle-legend-dot" style="background:#15803d;"></div>Injected</div>
+            <div class="cycle-legend-item"><div class="cycle-legend-dot" style="background:rgba(220,38,38,0.4);border:1.5px solid #dc2626;"></div>Missed</div>
+            <div class="cycle-legend-item"><div class="cycle-legend-dot" style="background:transparent;border:2px solid #ef4444;"></div>Today</div>
+            <div class="cycle-legend-item"><div class="cycle-legend-dot" style="background:#1a1a1a;border:1.5px solid #2a2a2a;"></div>Upcoming</div>
           </div>
         </div>
         <div class="panel">
@@ -1801,41 +1805,77 @@ with check (true);`;
 
       const start = parseDateInput(state.config.cycleStartDate);
       const todayStr = todayIso();
-      const loggedDates = new Set(state.recentLogs.map((l) => l.log_date));
-      const DOW_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+      const injectedDates = new Set(state.recentInjections.map((i) => i.injection_date));
+      const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-      // Day-of-week label column
-      const labelCol = document.createElement('div');
-      labelCol.className = 'heatmap-labels';
-      labelCol.innerHTML = '<div style="height:18px;"></div>' + DOW_LABELS.map((d) => `<div class="heatmap-dow">${d}</div>`).join('');
-      container.appendChild(labelCol);
+      // Header row
+      const headerRow = document.createElement('div');
+      headerRow.className = 'cycle-header-row';
+      headerRow.innerHTML = `<div class="cycle-week-lbl"></div>` +
+        DAY_LABELS.map((d) => `<div class="cycle-day-hdr">${d}</div>`).join('');
+      container.appendChild(headerRow);
 
-      // Use local date arithmetic to avoid UTC timezone shift
-      const startY = start.getFullYear();
-      const startM = start.getMonth();
-      const startD = start.getDate();
+      const sy = start.getFullYear(), sm = start.getMonth(), sd = start.getDate();
 
       for (let w = 0; w < 18; w++) {
-        const col = document.createElement('div');
-        col.className = 'heatmap-col';
-        col.innerHTML = `<div class="heatmap-week-lbl">W${w + 1}</div>`;
+        const weekStartDate = new Date(sy, sm, sd + w * 7);
+        const weekEndDate = new Date(sy, sm, sd + w * 7 + 6);
+        const isCurrentWeek = todayStr >= localDateStr(weekStartDate) && todayStr <= localDateStr(weekEndDate);
+
+        const row = document.createElement('div');
+        row.className = `cycle-row${isCurrentWeek ? ' current-week' : ''}`;
+
+        const wLbl = document.createElement('div');
+        wLbl.className = `cycle-week-lbl${isCurrentWeek ? ' active' : ''}`;
+        wLbl.textContent = `W${w + 1}`;
+        row.appendChild(wLbl);
+
         for (let d = 0; d < 7; d++) {
-          const dayOffset = w * 7 + d;
-          const cellDate = new Date(startY, startM, startD + dayOffset);
-          const y = cellDate.getFullYear();
-          const m = String(cellDate.getMonth() + 1).padStart(2, '0');
-          const day = String(cellDate.getDate()).padStart(2, '0');
-          const cellStr = `${y}-${m}-${day}`;
-          const cell = document.createElement('div');
-          cell.className = 'heatmap-cell';
-          if (cellStr === todayStr) cell.classList.add('today');
-          else if (cellStr < todayStr) { if (loggedDates.has(cellStr)) cell.classList.add('logged'); }
-          else cell.classList.add('future');
-          cell.title = cellStr;
-          col.appendChild(cell);
+          const cellDate = new Date(sy, sm, sd + w * 7 + d);
+          const cellStr = localDateStr(cellDate);
+          const dow = cellDate.getDay(); // 0=Sun,1=Mon,...,6=Sat
+          const isInjDay = dow === 1 || dow === 4;
+          const isToday = cellStr === todayStr;
+          const isFuture = cellStr > todayStr;
+
+          const dayCell = document.createElement('div');
+          dayCell.className = 'cycle-day';
+
+          if (isInjDay) {
+            const dot = document.createElement('div');
+            dot.className = 'inj-dot';
+            if (isToday) {
+              dot.classList.add('today');
+              dot.textContent = '●';
+            } else if (isFuture) {
+              dot.classList.add('future');
+            } else if (injectedDates.has(cellStr)) {
+              dot.classList.add('injected');
+              dot.textContent = '✓';
+            } else {
+              dot.classList.add('missed');
+              dot.textContent = '✕';
+            }
+            dot.title = cellStr;
+            dayCell.appendChild(dot);
+          } else if (isToday) {
+            const pip = document.createElement('div');
+            pip.className = 'today-pip';
+            pip.title = 'Today';
+            dayCell.appendChild(pip);
+          }
+
+          row.appendChild(dayCell);
         }
-        container.appendChild(col);
+        container.appendChild(row);
       }
+    }
+
+    function localDateStr(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
     }
 
     // ── Per-exercise strength chart ─────────────────────────────────────────
@@ -2624,7 +2664,7 @@ with check (true);`;
       const [todayLogResult, recentLogsResult, recentInjectionsResult, supplementsResult, latestWeightResult, taskResult, workoutResult, todayInjectionResult, todayWorkoutResult] = await Promise.all([
         supabase.from('daily_logs').select('*').eq('log_date', today).maybeSingle(),
         supabase.from('daily_logs').select('*').order('log_date', { ascending: false }).limit(130),
-        supabase.from('injections').select('*').order('injection_date', { ascending: false }).limit(10),
+        supabase.from('injections').select('*').order('injection_date', { ascending: false }).limit(50),
         supabase.from('supplement_logs').select('supplement_name, taken').eq('log_date', today),
         supabase.from('daily_logs').select('weight_kg, log_date').not('weight_kg', 'is', null).order('log_date', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('task_logs').select('task_name, completed').eq('log_date', today),
