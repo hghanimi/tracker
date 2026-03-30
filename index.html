@@ -657,6 +657,26 @@
     .exercise-selector:focus { border-color: var(--accent); }
     #strength-chart-empty { font-size: 0.85rem; color: var(--muted); text-align: center; padding: 20px 0; }
 
+    /* ── Injection edit ── */
+    .list-item-header { display: flex; justify-content: space-between; align-items: center; }
+    .edit-inj-btn { background: none; border: none; color: var(--muted); font-size: 0.85rem; padding: 2px 6px; cursor: pointer; border-radius: 6px; }
+    .edit-inj-btn:hover { color: var(--accent); background: var(--accent-soft); }
+    .inj-edit-form { margin-top: 10px; display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .inj-edit-row { display: flex; gap: 8px; }
+    .inj-edit-row input, .inj-edit-row select { flex: 1; min-width: 0; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); background: #181818; color: var(--text); font-size: 0.88rem; }
+    .inj-edit-actions { display: flex; gap: 8px; }
+    .inj-edit-actions .btn { flex: 1; padding: 7px 0; font-size: 0.88rem; }
+    .btn-danger { background: var(--danger); color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+
+    /* ── Mirror sets button ── */
+    .mirror-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 0.78rem; padding: 3px 10px; border-radius: 8px; cursor: pointer; margin-top: 6px; }
+    .mirror-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Manual session picker ── */
+    .session-picker-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .session-picker-row select { flex: 1; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: #181818; color: var(--text); font-size: 0.9rem; appearance: none; }
+    .session-picker-row select:focus { border-color: var(--accent); outline: none; }
+
     /* ── Gym mode ── */
     body.gym-mode { font-size: 1.08rem; }
     body.gym-mode .stat-value { font-size: 1.45rem; }
@@ -875,6 +895,16 @@
 
       <!-- WORKOUT TAB -->
       <section id="tab-workout" class="tab-screen hidden">
+        <div class="panel panel-tight">
+          <div class="session-picker-row">
+            <select id="manual-session-picker">
+              <option value="">— Pick session manually —</option>
+              <option value="Push A">Push A</option>
+              <option value="Pull B">Pull B</option>
+              <option value="Legs C">Legs C</option>
+            </select>
+          </div>
+        </div>
         <div id="workout-rest-msg" class="panel rest-day-msg hidden">
           <h2 id="workout-rest-title">Rest Day</h2>
           <p id="workout-rest-detail" class="muted"></p>
@@ -2129,12 +2159,17 @@ with check (true);`;
       });
     }
 
-    async function renderWorkoutTab() {
+    async function renderWorkoutTab(manualSession) {
       const dow = new Date().getDay();
       const workoutNames = { 0: 'Pull B', 3: 'Push A', 4: 'Pull B', 6: 'Push A', 1: 'Legs C' };
-      const session = workoutNames[dow] || null;
+      const autoSession = workoutNames[dow] || null;
+      const session = manualSession || autoSession;
       const exercises = session ? WORKOUT_PLAN[session] : null;
       const statsPanel = document.getElementById('workout-stats-panel');
+
+      // Keep picker in sync
+      const picker = document.getElementById('manual-session-picker');
+      if (picker && manualSession) picker.value = manualSession;
 
       if (!exercises) {
         els.workoutRestMsg.classList.remove('hidden');
@@ -2144,7 +2179,7 @@ with check (true);`;
         els.workoutRestTitle.textContent = cardioMorning ? 'Active Recovery' : 'Rest Day';
         els.workoutRestDetail.textContent = cardioMorning
           ? 'No weights today. Morning cardio walk is on your schedule.'
-          : 'Full rest day. Focus on nutrition, hydration, and sleep.';
+          : 'Full rest day. Pick a session above to log anyway.';
         return;
       }
 
@@ -2243,6 +2278,7 @@ with check (true);`;
           </div>
           ${prevHtml}
           <div class="exercise-sets">${setsHtml}</div>
+          <button type="button" class="mirror-btn">↓ Mirror first set to all</button>
         `;
 
         // Per-exercise unit toggle
@@ -2257,6 +2293,21 @@ with check (true);`;
         };
         kgBtn.addEventListener('click', () => applyUnit('kg'));
         lbBtn.addEventListener('click', () => applyUnit('lb'));
+
+        // Mirror first set to all other sets
+        card.querySelector('.mirror-btn').addEventListener('click', () => {
+          const rows = card.querySelectorAll('.set-row');
+          if (rows.length < 2) return;
+          const firstInputs = rows[0].querySelectorAll('input');
+          const firstWeight = firstInputs[0]?.value;
+          const firstReps = firstInputs[1]?.value;
+          rows.forEach((row, idx) => {
+            if (idx === 0) return;
+            const inputs = row.querySelectorAll('input');
+            if (firstWeight) inputs[0].value = firstWeight;
+            if (firstReps) inputs[1].value = firstReps;
+          });
+        });
 
         // Set completion checkmarks — tap to toggle, trigger rest timer on complete
         card.querySelectorAll('.set-check').forEach((btn) => {
@@ -2356,10 +2407,68 @@ with check (true);`;
         const item = document.createElement('div');
         item.className = 'list-item';
         item.innerHTML = `
-          <strong>${entry.compound}</strong>
+          <div class="list-item-header">
+            <strong>${entry.compound}</strong>
+            <button class="edit-inj-btn" type="button">Edit</button>
+          </div>
           <span class="muted">${formatShortDate(entry.injection_date)} \u00b7 ${entry.dose_mg ?? '-'}mg \u00b7 ${entry.site || '-'}</span>
-          <span>${entry.notes || 'No notes'}</span>
+          <span>${entry.notes || ''}</span>
+          <div class="inj-edit-form hidden">
+            <div class="inj-edit-row">
+              <input type="text" placeholder="Compound" value="${entry.compound || ''}" data-field="compound">
+              <input type="number" placeholder="mg" value="${entry.dose_mg || ''}" data-field="dose_mg" style="max-width:90px">
+            </div>
+            <div class="inj-edit-row">
+              <select data-field="site">
+                <option value="">Site</option>
+                <option value="LEFT GLUTE"${entry.site === 'LEFT GLUTE' ? ' selected' : ''}>Left Glute</option>
+                <option value="RIGHT GLUTE"${entry.site === 'RIGHT GLUTE' ? ' selected' : ''}>Right Glute</option>
+                <option value="LEFT QUAD"${entry.site === 'LEFT QUAD' ? ' selected' : ''}>Left Quad</option>
+                <option value="RIGHT QUAD"${entry.site === 'RIGHT QUAD' ? ' selected' : ''}>Right Quad</option>
+              </select>
+              <input type="text" placeholder="Notes" value="${entry.notes || ''}" data-field="notes">
+            </div>
+            <div class="inj-edit-actions">
+              <button type="button" class="btn btn-primary save-inj-edit-btn">Save</button>
+              <button type="button" class="btn btn-danger delete-inj-btn">Delete</button>
+            </div>
+          </div>
         `;
+
+        const editBtn = item.querySelector('.edit-inj-btn');
+        const editForm = item.querySelector('.inj-edit-form');
+        editBtn.addEventListener('click', () => {
+          editForm.classList.toggle('hidden');
+          editBtn.textContent = editForm.classList.contains('hidden') ? 'Edit' : 'Cancel';
+        });
+
+        item.querySelector('.save-inj-edit-btn').addEventListener('click', async () => {
+          const fields = {};
+          editForm.querySelectorAll('[data-field]').forEach((el) => {
+            fields[el.dataset.field] = el.value;
+          });
+          const { error } = await state.supabase
+            .from('injections')
+            .update({
+              compound: fields.compound || entry.compound,
+              dose_mg: parseFloat(fields.dose_mg) || null,
+              site: fields.site || null,
+              notes: fields.notes || null,
+            })
+            .eq('id', entry.id);
+          if (error) { showToast('Update failed: ' + error.message); return; }
+          await refreshAndRender();
+          showToast('Injection updated');
+        });
+
+        item.querySelector('.delete-inj-btn').addEventListener('click', async () => {
+          if (!confirm('Delete this injection?')) return;
+          const { error } = await state.supabase.from('injections').delete().eq('id', entry.id);
+          if (error) { showToast('Delete failed: ' + error.message); return; }
+          await refreshAndRender();
+          showToast('Injection deleted');
+        });
+
         els.recentInjections.appendChild(item);
       });
     }
@@ -2727,6 +2836,9 @@ with check (true);`;
       els.resetAppBtn.addEventListener('click', handleReset);
       document.getElementById('wf-start-btn').addEventListener('click', startWorkoutTimer);
       document.getElementById('wf-end-btn').addEventListener('click', endWorkoutTimer);
+      document.getElementById('manual-session-picker').addEventListener('change', (e) => {
+        renderWorkoutTab(e.target.value || undefined);
+      });
       els.bottomNav.addEventListener('click', handleTabClick);
 
       // Mark all supplements
