@@ -21,9 +21,7 @@
       --shadow: 0 0 0 1px rgba(34, 197, 94, 0.08);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -38,10 +36,7 @@
       justify-content: center;
     }
 
-    button,
-    input,
-    select,
-    textarea {
+    button, input, select, textarea {
       font: inherit;
       color: inherit;
     }
@@ -54,9 +49,7 @@
       background: var(--bg);
     }
 
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
     .screen {
       display: flex;
@@ -72,16 +65,9 @@
       box-shadow: var(--shadow);
     }
 
-    .panel-tight {
-      padding: 12px;
-    }
+    .panel-tight { padding: 12px; }
 
-    h1,
-    h2,
-    h3,
-    p {
-      margin: 0;
-    }
+    h1, h2, h3, p { margin: 0; }
 
     .title-row {
       display: flex;
@@ -96,10 +82,7 @@
       letter-spacing: 0.02em;
     }
 
-    .subtitle,
-    .muted {
-      color: var(--muted);
-    }
+    .subtitle, .muted { color: var(--muted); }
 
     .mono,
     .sql-block,
@@ -113,10 +96,7 @@
       font-family: 'Space Mono', monospace;
     }
 
-    .form-grid {
-      display: grid;
-      gap: 12px;
-    }
+    .form-grid { display: grid; gap: 12px; }
 
     .field {
       display: flex;
@@ -128,7 +108,6 @@
       font-size: 0.92rem;
       color: var(--muted);
     }
-
 
     .field input,
     .field select,
@@ -144,6 +123,17 @@
       font-size: 1rem;
     }
 
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .field input[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .exercise-card input[type="number"],
     .exercise-card input[type="text"] {
       background: #f3f3f3;
@@ -155,10 +145,359 @@
       color: #888;
       opacity: 1;
     }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn:hover { background: #1e1e1e; border-color: #333; }
+    .btn-primary {
+      background: var(--accent);
+      color: #051107;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { background: #16a34a; border-color: #16a34a; }
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+    .btn-danger:hover { background: #b91c1c; }
+
+    /* ── Section head ── */
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .section-head h2 { margin-bottom: 0; }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .stat-card {
+      background: var(--panel-2);
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .stat-value { font-size: 1.2rem; font-weight: 700; }
+
+    /* ── Phase ── */
+    .phase-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .phase-badge {
+      font-size: 0.72rem;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 10px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    /* ── Progress bar ── */
+    .progress-track {
+      background: var(--panel-2);
+      border-radius: 8px;
+      height: 8px;
+      overflow: hidden;
+      margin: 10px 0 6px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 8px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+    .progress-label { font-size: 0.82rem; color: var(--muted); }
+
+    /* ── Task list ── */
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+    .task-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .task-card:hover { border-color: #333; }
+    .task-card.is-complete { opacity: 0.5; }
+    .task-card.is-now { border-color: var(--accent); }
+    .task-card.is-past { opacity: 0.65; }
+    .task-main { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+    .time-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .task-title { font-weight: 600; font-size: 0.93rem; }
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .task-meta .muted { font-size: 0.78rem; }
+    .tag {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+    .tag.is-accent {
+      background: var(--accent-soft);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: var(--accent);
+    }
+    .checkbox-status {
+      font-size: 1rem;
+      color: var(--accent);
+      min-width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Supplement list ── */
+    .supplement-list { display: flex; flex-direction: column; gap: 8px; }
+    .checkbox-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .checkbox-card:hover { border-color: #333; }
+    .checkbox-card.is-checked { border-color: var(--accent); }
+    .checkbox-label { display: flex; flex-direction: column; gap: 2px; }
+
+    /* ── Exercise card ── */
+    .exercise-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .exercise-card:last-child { margin-bottom: 0; }
+    .exercise-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 10px; }
+    .exercise-sets { display: flex; flex-direction: column; gap: 6px; }
+    .set-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+    .set-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      min-width: 24px;
+    }
+
+    /* ── Alert / injection banner ── */
+    .alert {
+      background: rgba(220, 38, 38, 0.1);
+      border-color: rgba(220, 38, 38, 0.35);
+      color: #fca5a5;
+      font-weight: 600;
+      text-align: center;
+      letter-spacing: 0.03em;
+      font-size: 0.9rem;
+    }
+    @keyframes pulse-border {
+      0%, 100% { border-color: rgba(220, 38, 38, 0.3); }
+      50%       { border-color: rgba(220, 38, 38, 0.75); }
+    }
+    .pulse { animation: pulse-border 1.6s ease-in-out infinite; }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      padding: 8px 8px 12px;
+      z-index: 100;
+    }
+    .tab-row {
+      display: flex;
+      justify-content: space-around;
+      gap: 4px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px 2px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { background: var(--panel-2); color: var(--text); }
+    .tab-btn.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* ── Toast ── */
+    .toast-stack {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 200;
+      pointer-events: none;
+      width: max-content;
+      max-width: calc(100vw - 32px);
+    }
+    .toast {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 0.88rem;
+      color: var(--text);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      animation: toast-in 0.2s ease;
+      text-align: center;
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Misc ── */
+    .split-grid { display: flex; flex-direction: column; gap: 16px; }
+    .list-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.92rem;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .session-badge {
+      font-size: 0.75rem;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px 10px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .rest-day-msg { text-align: center; padding: 28px 16px; }
+    .rest-day-msg h2 { margin-bottom: 8px; }
+    .pre-cycle-msg { text-align: center; padding: 24px 16px; }
+    .countdown-val {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: 'Space Mono', monospace;
+      margin: 10px 0;
+    }
+    .danger-text { font-size: 0.85rem; color: var(--muted); margin: 0; }
+    .button-row { display: flex; gap: 10px; margin-top: 10px; }
+    .sql-block {
+      background: var(--panel-2);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 0.76rem;
+      overflow-x: auto;
+      white-space: pre;
+      color: var(--muted);
+      margin-top: 10px;
+      font-family: 'Space Mono', monospace;
+    }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .table-wrap th {
+      text-align: left;
+      padding: 6px 8px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .table-wrap td { padding: 6px 8px; border-bottom: 1px solid #181818; }
+    .energy-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+    .energy-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+    }
+    .energy-btn:hover { border-color: var(--accent); }
+    .energy-btn.active {
+      background: var(--accent);
+      color: #051107;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    canvas { display: block; }
   </style>
 </head>
 <body>
   <div class="app-shell">
+
+    <!-- ── SETUP SCREEN ── -->
     <section id="setup-screen" class="screen hidden">
       <div class="panel">
         <div class="title-row">
@@ -201,6 +540,7 @@
       </div>
     </section>
 
+    <!-- ── APP SCREEN ── -->
     <section id="app-screen" class="screen hidden">
       <div class="panel">
         <div class="title-row">
@@ -211,6 +551,7 @@
         </div>
       </div>
 
+      <!-- TODAY TAB -->
       <section id="tab-today" class="tab-screen">
         <div id="pre-cycle-panel" class="panel pre-cycle-msg hidden">
           <h2 id="pre-cycle-title"></h2>
@@ -273,6 +614,7 @@
         </div>
       </section>
 
+      <!-- WORKOUT TAB -->
       <section id="tab-workout" class="tab-screen hidden">
         <div id="workout-rest-msg" class="panel rest-day-msg hidden">
           <h2 id="workout-rest-title">Rest Day</h2>
@@ -286,45 +628,156 @@
           <p id="workout-session-note" class="muted" style="margin-bottom: 12px;"></p>
           <div id="workout-exercise-list" class="task-list"></div>
         </div>
+        <div class="panel">
+          <div class="section-head"><h2>Log Stats</h2></div>
+          <form id="workout-form" class="form-grid" autocomplete="off">
+            <div class="field">
+              <label for="wf-name">Session</label>
+              <input id="wf-name" name="workout_name" type="text" placeholder="e.g. Push A">
+            </div>
+            <div class="field">
+              <label for="wf-duration">Duration (min)</label>
+              <input id="wf-duration" name="duration_minutes" type="number" min="0">
+            </div>
+            <div class="field">
+              <label for="wf-perf">Performance (1–10)</label>
+              <input id="wf-perf" name="performance_level" type="number" min="1" max="10">
+            </div>
+            <div class="field">
+              <label for="wf-notes">Notes</label>
+              <textarea id="wf-notes" name="notes" rows="2" maxlength="200" placeholder="Optional"></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Save Stats</button>
+          </form>
+        </div>
       </section>
 
+      <!-- LOG TAB -->
       <section id="tab-log" class="tab-screen hidden">
-        <div class="split-grid">
-          <div class="panel">
-            <h2>Daily Log</h2>
-            <form id="daily-log-form" class="form-grid" autocomplete="off">
-              <div class="field">
-                <label for="weight-kg">Weight (kg)</label>
-                <input id="weight-kg" name="weight_kg" type="number" step="0.1" min="0">
-              </div>
-              <div class="field">
-                <label for="water-liters">Water (L)</label>
-                <input id="water-liters" name="water_liters" type="number" step="0.1" min="0">
-              </div>
-              <div class="field">
-                <label for="calories">Calories</label>
-                <input id="calories" name="calories" type="number" min="0">
+        <div class="panel">
+          <h2>Daily Log</h2>
+          <form id="daily-log-form" class="form-grid" autocomplete="off">
+            <div class="field">
+              <label for="weight-kg">Weight (kg)</label>
+              <input id="weight-kg" name="weight_kg" type="number" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label for="water-liters">Water (L)</label>
+              <input id="water-liters" name="water_liters" type="number" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label for="calories">Calories</label>
+              <input id="calories" name="calories" type="number" min="0">
+            </div>
+            <div class="field">
+              <label for="sleep-hours">Sleep (hrs)</label>
+              <input id="sleep-hours" name="sleep_hours" type="number" step="0.1" min="0">
+            </div>
+            <div class="field">
+              <label for="notes">Notes</label>
+              <textarea id="notes" name="notes" rows="2" maxlength="200" placeholder="Optional"></textarea>
+            </div>
+            <div class="field">
+              <label>Energy Level (1–10)</label>
+              <div id="energy-grid" class="energy-grid"></div>
+              <input id="energy-level" name="energy_level" type="number" min="1" max="10" style="display:none;">
+            </div>
+            <button class="btn btn-primary" type="submit">Save Log</button>
+          </form>
+        </div>
+        <p class="danger-text">Reset clears local configuration and reloads setup.</p>
+        <div class="button-row">
+          <button id="reset-app-btn" class="btn btn-danger" type="button">Reset App</button>
+        </div>
+      </section>
+
+      <!-- INJECT TAB -->
+      <section id="tab-inject" class="tab-screen hidden">
+        <div class="panel">
+          <h2>Log Injection</h2>
+          <form id="injection-form" class="form-grid" autocomplete="off">
+            <div class="field">
+              <label for="inj-compound">Compound</label>
+              <input id="inj-compound" name="compound" type="text" value="Test Cyp + Mast E" required>
+            </div>
+            <div class="field">
+              <label for="inj-dose">Dose (mg)</label>
+              <input id="inj-dose" name="dose_mg" type="number" step="0.1" min="0" placeholder="e.g. 450">
+            </div>
+            <div class="field">
+              <label for="inj-site">Site</label>
+              <select id="inj-site" name="site">
+                <option value="">Auto-assign</option>
+                <option value="LEFT GLUTE">Left Glute</option>
+                <option value="RIGHT GLUTE">Right Glute</option>
+                <option value="LEFT QUAD">Left Quad</option>
+                <option value="RIGHT QUAD">Right Quad</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="inj-notes">Notes</label>
+              <textarea id="inj-notes" name="notes" rows="2" maxlength="200" placeholder="Optional"></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Log Injection</button>
+          </form>
+        </div>
+        <div class="panel">
+          <h2 style="margin-bottom: 12px;">Recent Injections</h2>
+          <div id="recent-injections"></div>
+        </div>
+      </section>
+
+      <!-- PROGRESS TAB -->
+      <section id="tab-progress" class="tab-screen hidden">
+        <div class="panel">
+          <h2 style="margin-bottom: 12px;">Weight Chart</h2>
+          <canvas id="weight-chart" style="width: 100%; height: 220px;"></canvas>
+        </div>
+        <div class="panel">
+          <h2 style="margin-bottom: 12px;">Log History</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Weight</th>
+                  <th>Water</th>
+                  <th>Cal</th>
+                  <th>Energy</th>
+                </tr>
+              </thead>
+              <tbody id="progress-table-body"></tbody>
+            </table>
           </div>
-          <div class="field">
-            <label for="sleep-hours">Sleep (hrs)</label>
-            <input id="sleep-hours" name="sleep_hours" type="number" step="0.1" min="0">
-          </div>
-          <div class="field">
-            <label for="notes">Notes</label>
-            <textarea id="notes" name="notes" rows="2" maxlength="200" placeholder="Optional"></textarea>
-          </div>
-          <div class="field">
-            <label for="energy-level">Energy Level (1-10)</label>
-            <input id="energy-level" name="energy_level" type="number" min="1" max="10">
-          </div>
-          <button class="btn btn-primary" type="submit">Save Log</button>
-        </form>
-      </div>
-      <p class="danger-text">Reset clears local configuration and reloads setup.</p>
-      <div class="button-row">
-        <button id="reset-app-btn" class="btn btn-danger" type="button">Reset App</button>
-      </div>
-    </section>
+        </div>
+        <div class="panel">
+          <h2 style="margin-bottom: 12px;">Recent Workouts</h2>
+          <div id="recent-workouts"></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS TAB -->
+      <section id="tab-settings" class="tab-screen hidden">
+        <div class="panel">
+          <h2 style="margin-bottom: 16px;">Settings</h2>
+          <form id="settings-form" class="form-grid" autocomplete="off">
+            <div class="field">
+              <label for="settings-name">Name</label>
+              <input id="settings-name" name="name" type="text" maxlength="60">
+            </div>
+            <div class="field">
+              <label for="settings-cycle-start">Cycle Start Date</label>
+              <input id="settings-cycle-start" name="cycleStartDate" type="date">
+            </div>
+            <div class="field">
+              <label>Supabase URL</label>
+              <input id="settings-supabase-url" type="text" readonly disabled>
+            </div>
+            <button class="btn btn-primary" type="submit">Save Settings</button>
+          </form>
+        </div>
+      </section>
+
     </section>
   </div>
 
@@ -430,9 +883,16 @@ create table if not exists public.workout_logs (
   workout_name text not null,
   duration_minutes integer,
   performance_level integer check (performance_level between 1 and 10),
+  details jsonb,
   notes text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (workout_date, workout_name)
 );
+
+-- If the table already exists, add missing column and constraint:
+alter table public.workout_logs add column if not exists details jsonb;
+create unique index if not exists workout_logs_date_name_idx
+  on public.workout_logs (workout_date, workout_name);
 
 alter table public.daily_logs enable row level security;
 alter table public.injections enable row level security;
@@ -626,11 +1086,11 @@ with check (true);`;
     }
 
     function getPhase(dayNumber) {
-      if (dayNumber <= 28) return 'Winstrol Kickstart · Weeks 1–4';
-      if (dayNumber <= 56) return 'Base Phase · Weeks 5–8';
-      if (dayNumber <= 84) return 'Masteron Finisher · Weeks 9–12';
-      if (dayNumber <= 98) return 'Bridge / HCG · Weeks 13–14';
-      return 'PCT · Weeks 15–18';
+      if (dayNumber <= 28) return 'Winstrol Kickstart \u00b7 Weeks 1\u20134';
+      if (dayNumber <= 56) return 'Base Phase \u00b7 Weeks 5\u20138';
+      if (dayNumber <= 84) return 'Masteron Finisher \u00b7 Weeks 9\u201312';
+      if (dayNumber <= 98) return 'Bridge / HCG \u00b7 Weeks 13\u201314';
+      return 'PCT \u00b7 Weeks 15\u201318';
     }
 
     function getInjectionSite(date = new Date()) {
@@ -822,7 +1282,7 @@ with check (true);`;
 
     function renderHeader() {
       const displayName = state.config.name || DEFAULT_NAME;
-      els.headerName.textContent = `${displayName} · Cycle Tracker`;
+      els.headerName.textContent = `${displayName} \u00b7 Cycle Tracker`;
       els.headerDate.textContent = formatLongDate();
     }
 
@@ -934,7 +1394,7 @@ with check (true);`;
             <span class="muted">${task.detail}</span>
             <span class="task-meta">
               <span class="tag ${task.completed ? 'is-accent' : isNow ? 'is-accent' : ''}">${statusLabel}</span>
-              <span>tap to toggle</span>
+              <span class="muted">tap to toggle</span>
             </span>
           </span>
           <span class="checkbox-status">${task.completed ? '\u2713' : ''}</span>
@@ -980,7 +1440,6 @@ with check (true);`;
       const session = workoutNames[dow] || null;
       const exercises = session ? WORKOUT_PLAN[session] : null;
 
-
       // KG/lb toggle row (always visible if workout day)
       let unitRow = document.getElementById('workout-unit-row');
       if (!unitRow) {
@@ -995,10 +1454,10 @@ with check (true);`;
       }
       let unit = window.localStorage.getItem('workoutUnit') || 'kg';
       unitRow.innerHTML = `<label style="font-size:0.98em;">Unit:</label>
-        <button id="unit-kg" type="button" class="btn" style="padding:4px 14px;${unit!=='lb'?'background:var(--accent);color:#051107;':''}">kg</button>
-        <button id="unit-lb" type="button" class="btn" style="padding:4px 14px;${unit==='lb'?'background:var(--accent);color:#051107;':''}">lb</button>`;
-      document.getElementById('unit-kg').onclick = () => { window.localStorage.setItem('workoutUnit','kg'); renderWorkoutTab(); };
-      document.getElementById('unit-lb').onclick = () => { window.localStorage.setItem('workoutUnit','lb'); renderWorkoutTab(); };
+        <button id="unit-kg" type="button" class="btn" style="padding:4px 14px;${unit !== 'lb' ? 'background:var(--accent);color:#051107;' : ''}">kg</button>
+        <button id="unit-lb" type="button" class="btn" style="padding:4px 14px;${unit === 'lb' ? 'background:var(--accent);color:#051107;' : ''}">lb</button>`;
+      document.getElementById('unit-kg').onclick = () => { window.localStorage.setItem('workoutUnit', 'kg'); renderWorkoutTab(); };
+      document.getElementById('unit-lb').onclick = () => { window.localStorage.setItem('workoutUnit', 'lb'); renderWorkoutTab(); };
 
       if (!exercises) {
         els.workoutRestMsg.classList.remove('hidden');
@@ -1014,8 +1473,8 @@ with check (true);`;
       els.workoutRestMsg.classList.add('hidden');
       els.workoutSessionPanel.classList.remove('hidden');
       els.workoutSessionTitle.textContent = session;
-      els.workoutSessionBadge.textContent = `5 exercises · ${session.split(' ')[0]}`;
-      els.workoutSessionNote.textContent = '1-2 RIR per set · 500ml water · ABE 15 min before';
+      els.workoutSessionBadge.textContent = `5 exercises \u00b7 ${session.split(' ')[0]}`;
+      els.workoutSessionNote.textContent = '1-2 RIR per set \u00b7 500ml water \u00b7 ABE 15 min before';
 
       // Load any saved details for today
       let savedDetails = {};
@@ -1039,15 +1498,12 @@ with check (true);`;
         card.className = 'exercise-card';
 
         let setsHtml = '';
-        let setCount = 0;
         if (ex.warmup) {
-          setCount++;
           const val = (savedDetails?.[i]?.[0] && savedDetails[i][0].weight) || '';
           const reps = (savedDetails?.[i]?.[0] && savedDetails[i][0].reps) || '';
           setsHtml += `<div class="set-row"><span class="set-label">W</span><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> × <input type="text" placeholder="reps" style="width:60px" value="${reps}"></div>`;
         }
         for (let s = 1; s <= ex.sets; s++) {
-          setCount++;
           const val = (savedDetails?.[i]?.[s] && savedDetails[i][s].weight) || '';
           const reps = (savedDetails?.[i]?.[s] && savedDetails[i][s].reps) || '';
           setsHtml += `<div class="set-row"><span class="set-label">S${s}</span><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> × <input type="text" placeholder="reps" style="width:60px" value="${reps}"></div>`;
@@ -1078,21 +1534,19 @@ with check (true);`;
       saveBtn.style.display = '';
       saveBtn.onclick = async (e) => {
         e.preventDefault();
-        // Gather all input values
         const details = {};
-        const unit = window.localStorage.getItem('workoutUnit') || 'kg';
+        const currentUnit = window.localStorage.getItem('workoutUnit') || 'kg';
         inputRefs.forEach((setInputs, i) => {
           details[i] = [];
           for (let j = 0; j < setInputs.length; j += 2) {
             let weight = setInputs[j].value;
             const reps = setInputs[j + 1].value;
-            if (weight && unit === 'lb') {
+            if (weight && currentUnit === 'lb') {
               weight = (parseFloat(weight) * 0.453592).toFixed(1);
             }
             details[i].push({ weight, reps });
           }
         });
-        // Save to Supabase
         const { error } = await state.supabase
           .from('workout_logs')
           .upsert({
@@ -1103,8 +1557,7 @@ with check (true);`;
           }, { onConflict: 'workout_date,workout_name' });
         if (error) showToast('Save failed: ' + error.message);
         else showToast('Workout saved!');
-        // After save, reload in kg
-        window.localStorage.setItem('workoutUnit','kg');
+        window.localStorage.setItem('workoutUnit', 'kg');
         renderWorkoutTab();
       };
     }
@@ -1136,7 +1589,7 @@ with check (true);`;
         item.className = 'list-item';
         item.innerHTML = `
           <strong>${entry.compound}</strong>
-          <span class="muted">${formatShortDate(entry.injection_date)} · ${entry.dose_mg ?? '-'}mg · ${entry.site || '-'}</span>
+          <span class="muted">${formatShortDate(entry.injection_date)} \u00b7 ${entry.dose_mg ?? '-'}mg \u00b7 ${entry.site || '-'}</span>
           <span>${entry.notes || 'No notes'}</span>
         `;
         els.recentInjections.appendChild(item);
@@ -1158,7 +1611,7 @@ with check (true);`;
         item.className = 'list-item';
         item.innerHTML = `
           <strong>${entry.workout_name}</strong>
-          <span class="muted">${formatShortDate(entry.workout_date)} · ${entry.duration_minutes ?? '-'} min · ${entry.performance_level ?? '-'} / 10</span>
+          <span class="muted">${formatShortDate(entry.workout_date)} \u00b7 ${entry.duration_minutes ?? '-'} min \u00b7 ${entry.performance_level ?? '-'} / 10</span>
           <span>${entry.notes || 'No notes'}</span>
         `;
         els.recentWorkouts.appendChild(item);
