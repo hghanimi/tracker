@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Cycle Tracker</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#22c55e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -493,6 +497,197 @@
     }
     canvas { display: block; }
 
+    /* ── Nav badges ── */
+    .tab-btn { position: relative; }
+    .nav-badge {
+      position: absolute;
+      top: 5px;
+      right: 8px;
+      width: 7px;
+      height: 7px;
+      background: var(--danger);
+      border-radius: 50%;
+    }
+
+    /* ── Weight trend delta ── */
+    .stat-delta { font-size: 0.62rem; font-family: 'Space Mono', monospace; margin-top: 2px; }
+    .stat-delta.up { color: var(--accent); }
+    .stat-delta.down { color: #60a5fa; }
+
+    /* ── Next injection row ── */
+    .next-inj-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .next-inj-row strong { color: var(--text); }
+
+    /* ── Set completion ── */
+    .set-row.is-done .set-row-inputs { opacity: 0.35; text-decoration: line-through; }
+    .set-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: transparent;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      margin-left: auto;
+    }
+    .set-check.checked { background: var(--accent); border-color: var(--accent); color: #051107; }
+    .set-row-inputs { display: flex; align-items: center; gap: 8px; flex: 1; }
+
+    /* ── Previous session display ── */
+    .prev-session {
+      font-size: 0.7rem;
+      color: #4b5563;
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+    .prev-session-label { color: #6ee7b7; font-weight: 700; }
+
+    /* ── Rest timer overlay ── */
+    .rest-timer-overlay {
+      position: fixed;
+      bottom: 74px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 448px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px 16px 14px;
+      z-index: 150;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+      text-align: center;
+      animation: slide-up 0.2s ease;
+    }
+    .rest-timer-overlay.hidden { display: none; }
+    @keyframes slide-up {
+      from { transform: translateX(-50%) translateY(16px); opacity: 0; }
+      to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+    }
+    .rest-timer-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+    .rest-timer-count {
+      font-family: 'Space Mono', monospace;
+      font-size: 3.2rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+    .rest-timer-count.warning { color: #f59e0b; }
+    .rest-timer-count.urgent  { color: var(--danger); }
+    .rest-presets { display: flex; gap: 6px; justify-content: center; margin-bottom: 10px; }
+    .rest-preset-btn {
+      padding: 4px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      transition: all 0.15s;
+    }
+    .rest-preset-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+    .rest-timer-btns { display: flex; gap: 10px; }
+    .rest-timer-btns .btn { flex: 1; font-size: 0.88rem; padding: 8px; }
+
+    /* ── BP / macros row layout ── */
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .two-col .field label, .three-col .field label { font-size: 0.8rem; }
+    .two-col .field input, .three-col .field input { padding: 10px 10px; font-size: 0.9rem; }
+
+    /* ── Side effects ── */
+    .side-effects-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+    .effect-btn {
+      padding: 6px 13px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .effect-btn.active { background: rgba(220,38,38,0.15); border-color: rgba(220,38,38,0.4); color: #fca5a5; }
+
+    /* ── Compliance heatmap ── */
+    .heatmap-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+    .heatmap { display: flex; gap: 3px; }
+    .heatmap-labels { display: flex; flex-direction: column; gap: 3px; padding-top: 22px; flex-shrink: 0; }
+    .heatmap-dow { height: 14px; font-size: 0.58rem; color: var(--muted); display: flex; align-items: center; padding-right: 4px; }
+    .heatmap-col { display: flex; flex-direction: column; gap: 3px; }
+    .heatmap-week-lbl { font-size: 0.58rem; color: var(--muted); height: 18px; display: flex; align-items: center; justify-content: center; }
+    .heatmap-cell { width: 14px; height: 14px; border-radius: 2px; background: #1a1a1a; flex-shrink: 0; cursor: default; }
+    .heatmap-cell.logged { background: #16a34a; }
+    .heatmap-cell.today  { background: var(--accent); box-shadow: 0 0 0 1px rgba(255,255,255,0.15); }
+    .heatmap-cell.future { background: #111; }
+    .heatmap-legend { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 0.72rem; color: var(--muted); }
+    .legend-cell { width: 12px; height: 12px; border-radius: 2px; }
+
+    /* ── Exercise strength chart ── */
+    .exercise-selector {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #181818;
+      color: var(--text);
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      outline: none;
+      appearance: none;
+    }
+    .exercise-selector:focus { border-color: var(--accent); }
+    #strength-chart-empty { font-size: 0.85rem; color: var(--muted); text-align: center; padding: 20px 0; }
+
+    /* ── Gym mode ── */
+    body.gym-mode { font-size: 1.08rem; }
+    body.gym-mode .stat-value { font-size: 1.45rem; }
+    body.gym-mode .task-title { font-size: 1.02rem; }
+    body.gym-mode .exercise-name { font-size: 1.05rem; }
+    body.gym-mode .set-row input { width: 90px !important; font-size: 1rem; }
+    body.gym-mode .btn { padding: 13px 16px; font-size: 1rem; }
+    body.gym-mode .energy-btn { width: 40px; height: 40px; }
+    .gym-toggle-row { display: flex; align-items: center; justify-content: space-between; }
+    .toggle-pill {
+      width: 44px; height: 24px;
+      background: var(--border);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle-pill.on { background: var(--accent); }
+    .toggle-pill::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle-pill.on::after { transform: translateX(20px); }
+
     /* ── Workout timer ── */
     .timer-display {
       font-family: 'Space Mono', monospace;
@@ -633,6 +828,7 @@
             <div class="stat-card">
               <div class="stat-label">Last Weight</div>
               <div id="stat-weight" class="stat-value">-</div>
+              <div id="stat-weight-delta" class="stat-delta hidden"></div>
             </div>
           </div>
         </div>
@@ -641,6 +837,9 @@
           <div class="phase-row">
             <h2>Today</h2>
             <div id="phase-badge" class="phase-badge">-</div>
+          </div>
+          <div id="next-injection-row" class="next-inj-row hidden">
+            <span>Next injection:</span><strong id="next-inj-text">-</strong>
           </div>
         </div>
 
@@ -665,7 +864,10 @@
         <div id="supps-panel" class="panel">
           <div class="section-head">
             <h2>Supplements</h2>
-            <span id="supplement-count" class="muted"></span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span id="supplement-count" class="muted"></span>
+              <button id="mark-all-supps-btn" class="btn" type="button" style="padding:4px 10px;font-size:0.78rem;">Mark all</button>
+            </div>
           </div>
           <div id="supplement-list" class="supplement-list"></div>
         </div>
@@ -745,6 +947,46 @@
               <div id="energy-grid" class="energy-grid"></div>
               <input id="energy-level" name="energy_level" type="number" min="1" max="10" style="display:none;">
             </div>
+            <div class="two-col">
+              <div class="field">
+                <label for="systolic">Systolic (mmHg)</label>
+                <input id="systolic" name="systolic" type="number" min="60" max="220" placeholder="e.g. 120">
+              </div>
+              <div class="field">
+                <label for="diastolic">Diastolic (mmHg)</label>
+                <input id="diastolic" name="diastolic" type="number" min="40" max="140" placeholder="e.g. 80">
+              </div>
+            </div>
+            <div class="field">
+              <label>Macros</label>
+              <div class="three-col">
+                <div class="field">
+                  <label for="protein-g">Protein (g)</label>
+                  <input id="protein-g" name="protein_g" type="number" min="0" placeholder="g">
+                </div>
+                <div class="field">
+                  <label for="carbs-g">Carbs (g)</label>
+                  <input id="carbs-g" name="carbs_g" type="number" min="0" placeholder="g">
+                </div>
+                <div class="field">
+                  <label for="fat-g">Fat (g)</label>
+                  <input id="fat-g" name="fat_g" type="number" min="0" placeholder="g">
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Side Effects <span class="muted" style="font-size:0.75rem;">(tap to flag)</span></label>
+              <div class="side-effects-grid" id="side-effects-grid">
+                <button type="button" class="effect-btn" data-effect="Water retention">Water retention</button>
+                <button type="button" class="effect-btn" data-effect="Mood changes">Mood changes</button>
+                <button type="button" class="effect-btn" data-effect="Acne">Acne</button>
+                <button type="button" class="effect-btn" data-effect="Joint pain">Joint pain</button>
+                <button type="button" class="effect-btn" data-effect="Fatigue">Fatigue</button>
+                <button type="button" class="effect-btn" data-effect="Sleep issues">Sleep issues</button>
+                <button type="button" class="effect-btn" data-effect="Appetite changes">Appetite changes</button>
+                <button type="button" class="effect-btn" data-effect="Libido changes">Libido changes</button>
+              </div>
+            </div>
             <button class="btn btn-primary" type="submit">Save Log</button>
           </form>
         </div>
@@ -793,8 +1035,41 @@
       <!-- PROGRESS TAB -->
       <section id="tab-progress" class="tab-screen hidden">
         <div class="panel">
+          <h2 style="margin-bottom: 12px;">Cycle Compliance</h2>
+          <div class="heatmap-scroll">
+            <div class="heatmap" id="compliance-heatmap"></div>
+          </div>
+          <div class="heatmap-legend">
+            <div class="legend-cell" style="background:#16a34a;"></div><span>Logged</span>
+            <div class="legend-cell" style="background:var(--accent);margin-left:8px;"></div><span>Today</span>
+            <div class="legend-cell" style="background:#1a1a1a;margin-left:8px;"></div><span>Missed</span>
+          </div>
+        </div>
+        <div class="panel">
           <h2 style="margin-bottom: 12px;">Weight Chart</h2>
           <canvas id="weight-chart" style="width: 100%; height: 220px;"></canvas>
+        </div>
+        <div class="panel">
+          <h2 style="margin-bottom: 10px;">Strength Progress</h2>
+          <select id="exercise-selector" class="exercise-selector">
+            <option value="">— Select exercise —</option>
+            <option value="Barbell Bench Press">Barbell Bench Press</option>
+            <option value="Overhead Press">Overhead Press</option>
+            <option value="Incline Dumbbell Press">Incline Dumbbell Press</option>
+            <option value="Lateral Raises">Lateral Raises</option>
+            <option value="Tricep Pushdown">Tricep Pushdown</option>
+            <option value="Deadlift">Deadlift</option>
+            <option value="Barbell / Cable Row">Barbell / Cable Row</option>
+            <option value="Lat Pulldown / Pull-up">Lat Pulldown / Pull-up</option>
+            <option value="Face Pulls">Face Pulls</option>
+            <option value="Barbell / Dumbbell Curl">Barbell / Dumbbell Curl</option>
+            <option value="Barbell Back Squat">Barbell Back Squat</option>
+            <option value="Romanian Deadlift">Romanian Deadlift</option>
+            <option value="Leg Press">Leg Press</option>
+            <option value="Walking Lunges">Walking Lunges</option>
+          </select>
+          <div id="strength-chart-empty" class="hidden"></div>
+          <canvas id="strength-chart" style="width:100%;height:200px;display:none;"></canvas>
         </div>
         <div class="panel">
           <h2 style="margin-bottom: 12px;">Log History</h2>
@@ -803,10 +1078,12 @@
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Weight</th>
-                  <th>Water</th>
-                  <th>Cal</th>
-                  <th>Energy</th>
+                  <th>kg</th>
+                  <th>BP</th>
+                  <th>Kcal</th>
+                  <th>💧</th>
+                  <th>😴</th>
+                  <th>⚡</th>
                 </tr>
               </thead>
               <tbody id="progress-table-body"></tbody>
@@ -839,17 +1116,42 @@
             <button class="btn btn-primary" type="submit">Save Settings</button>
           </form>
         </div>
+        <div class="panel">
+          <div class="gym-toggle-row">
+            <div>
+              <strong>Gym Mode</strong>
+              <p class="muted" style="font-size:0.82rem;margin-top:2px;">Larger text &amp; inputs for the gym</p>
+            </div>
+            <button id="gym-mode-toggle" class="toggle-pill" type="button"></button>
+          </div>
+        </div>
       </section>
 
     </section>
   </div>
 
+  <!-- REST TIMER OVERLAY -->
+  <div id="rest-timer-overlay" class="rest-timer-overlay hidden">
+    <div class="rest-timer-label">Rest Timer</div>
+    <div id="rest-timer-count" class="rest-timer-count">01:30</div>
+    <div class="rest-presets">
+      <button class="rest-preset-btn" data-secs="60">60s</button>
+      <button class="rest-preset-btn active" data-secs="90">90s</button>
+      <button class="rest-preset-btn" data-secs="120">2m</button>
+      <button class="rest-preset-btn" data-secs="180">3m</button>
+    </div>
+    <div class="rest-timer-btns">
+      <button id="rest-skip-btn" class="btn" type="button">Skip</button>
+      <button id="rest-add-btn" class="btn" type="button">+30s</button>
+    </div>
+  </div>
+
   <nav id="bottom-nav" class="bottom-nav hidden">
     <div class="tab-row">
       <button class="tab-btn active" data-tab="today" type="button">Today</button>
-      <button class="tab-btn" data-tab="workout" type="button">Train</button>
-      <button class="tab-btn" data-tab="log" type="button">Log</button>
-      <button class="tab-btn" data-tab="inject" type="button">Inject</button>
+      <button class="tab-btn" data-tab="workout" type="button">Train<span id="badge-train" class="nav-badge hidden"></span></button>
+      <button class="tab-btn" data-tab="log" type="button">Log<span id="badge-log" class="nav-badge hidden"></span></button>
+      <button class="tab-btn" data-tab="inject" type="button">Inject<span id="badge-inject" class="nav-badge hidden"></span></button>
       <button class="tab-btn" data-tab="progress" type="button">Progress</button>
       <button class="tab-btn" data-tab="settings" type="button">Settings</button>
     </div>
@@ -952,10 +1254,17 @@ create table if not exists public.workout_logs (
   unique (workout_date, workout_name)
 );
 
--- If the table already exists, add missing column and constraint:
+-- If the table already exists, add missing columns and constraints:
 alter table public.workout_logs add column if not exists details jsonb;
 create unique index if not exists workout_logs_date_name_idx
   on public.workout_logs (workout_date, workout_name);
+
+alter table public.daily_logs add column if not exists systolic integer;
+alter table public.daily_logs add column if not exists diastolic integer;
+alter table public.daily_logs add column if not exists protein_g numeric;
+alter table public.daily_logs add column if not exists carbs_g numeric;
+alter table public.daily_logs add column if not exists fat_g numeric;
+alter table public.daily_logs add column if not exists side_effects jsonb;
 
 alter table public.daily_logs enable row level security;
 alter table public.injections enable row level security;
@@ -1020,7 +1329,11 @@ with check (true);`;
       energyLevel: null,
       loading: false,
       exerciseUnits: [],
+      completedSets: new Map(),
       workoutTimer: { startTime: null, intervalId: null },
+      restTimer: { intervalId: null, remaining: 90, total: 90 },
+      sideEffects: new Set(),
+      gymMode: localStorage.getItem('gymMode') === '1',
     };
 
     const els = {
@@ -1349,6 +1662,245 @@ with check (true);`;
       state.workoutTimer.startTime = null;
     }
 
+    // ── Nav badges ──────────────────────────────────────────────────────────
+    function updateNavBadges() {
+      const dow = new Date().getDay();
+      const isWorkoutDay = [0, 1, 3, 4, 6].includes(dow);
+      const isInjDay = [1, 4].includes(dow);
+      document.getElementById('badge-log')?.classList.toggle('hidden', !!state.todayLog);
+      document.getElementById('badge-train')?.classList.toggle('hidden', !(isWorkoutDay && state.todayWorkoutCount === 0));
+      document.getElementById('badge-inject')?.classList.toggle('hidden', !(isInjDay && state.todayInjectionCount === 0));
+    }
+
+    // ── Mark all supplements taken ──────────────────────────────────────────
+    async function markAllSupplements() {
+      const meta = getCycleMeta();
+      const supplements = getSupplements(meta);
+      const untaken = supplements.filter((s) => state.todaySupplements.get(s.name) !== true);
+      if (!untaken.length) { showToast('All supplements already logged'); return; }
+      const upserts = untaken.map((s) =>
+        state.supabase.from('supplement_logs')
+          .upsert({ log_date: todayIso(), supplement_name: s.name, taken: true }, { onConflict: 'log_date,supplement_name' })
+      );
+      await Promise.all(upserts);
+      untaken.forEach((s) => state.todaySupplements.set(s.name, true));
+      renderToday();
+      showToast('All supplements marked taken');
+    }
+
+    // ── Auto-fill inject form ───────────────────────────────────────────────
+    function prefillInjectForm() {
+      const form = els.injectionForm;
+      if (!form) return;
+      const meta = getCycleMeta();
+      const site = getInjectionSite() || '';
+      const siteSelect = document.getElementById('inj-site');
+      if (siteSelect && site) siteSelect.value = site;
+      const doseInput = document.getElementById('inj-dose');
+      if (doseInput && !doseInput.value) {
+        if (meta.week >= 1 && meta.week <= 12) doseInput.value = '450';
+      }
+    }
+
+    // ── Rest timer ──────────────────────────────────────────────────────────
+    function showRestTimer() {
+      const overlay = document.getElementById('rest-timer-overlay');
+      if (!overlay) return;
+      overlay.classList.remove('hidden');
+      startRestTimer(state.restTimer.total);
+    }
+
+    function startRestTimer(seconds) {
+      clearInterval(state.restTimer.intervalId);
+      state.restTimer.remaining = seconds;
+      state.restTimer.total = seconds;
+      // highlight active preset
+      document.querySelectorAll('.rest-preset-btn').forEach((b) => {
+        b.classList.toggle('active', Number(b.dataset.secs) === seconds);
+      });
+      renderRestTimerCount();
+      state.restTimer.intervalId = setInterval(() => {
+        state.restTimer.remaining -= 1;
+        if (state.restTimer.remaining <= 0) {
+          clearInterval(state.restTimer.intervalId);
+          state.restTimer.intervalId = null;
+          state.restTimer.remaining = 0;
+          renderRestTimerCount();
+          if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+        } else {
+          renderRestTimerCount();
+        }
+      }, 1000);
+    }
+
+    function renderRestTimerCount() {
+      const el = document.getElementById('rest-timer-count');
+      if (!el) return;
+      const r = state.restTimer.remaining;
+      const m = Math.floor(r / 60);
+      const s = r % 60;
+      el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      el.className = 'rest-timer-count';
+      if (r === 0) el.classList.add('urgent');
+      else if (r <= 15) el.classList.add('warning');
+    }
+
+    function stopRestTimer() {
+      clearInterval(state.restTimer.intervalId);
+      state.restTimer.intervalId = null;
+      const overlay = document.getElementById('rest-timer-overlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+
+    // ── Compliance heatmap ──────────────────────────────────────────────────
+    function renderComplianceHeatmap() {
+      const container = document.getElementById('compliance-heatmap');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const start = parseDateInput(state.config.cycleStartDate);
+      const todayStr = todayIso();
+      const loggedDates = new Set(state.recentLogs.map((l) => l.log_date));
+      const DOW_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+      // Day-of-week label column
+      const labelCol = document.createElement('div');
+      labelCol.className = 'heatmap-labels';
+      labelCol.innerHTML = '<div style="height:18px;"></div>' + DOW_LABELS.map((d) => `<div class="heatmap-dow">${d}</div>`).join('');
+      container.appendChild(labelCol);
+
+      for (let w = 0; w < 18; w++) {
+        const col = document.createElement('div');
+        col.className = 'heatmap-col';
+        col.innerHTML = `<div class="heatmap-week-lbl">W${w + 1}</div>`;
+        // Mon–Sun order
+        for (let d = 0; d < 7; d++) {
+          const dayOffset = w * 7 + d;
+          const cellDate = new Date(start);
+          cellDate.setDate(start.getDate() + dayOffset);
+          const cellStr = cellDate.toISOString().slice(0, 10);
+          const cell = document.createElement('div');
+          cell.className = 'heatmap-cell';
+          if (cellStr === todayStr) cell.classList.add('today');
+          else if (cellStr < todayStr) cell.classList.add(loggedDates.has(cellStr) ? 'logged' : '');
+          else cell.classList.add('future');
+          cell.title = cellStr;
+          col.appendChild(cell);
+        }
+        container.appendChild(col);
+      }
+    }
+
+    // ── Per-exercise strength chart ─────────────────────────────────────────
+    async function renderStrengthChart(exerciseName) {
+      const canvas = document.getElementById('strength-chart');
+      const empty = document.getElementById('strength-chart-empty');
+      if (!canvas || !empty) return;
+
+      if (!exerciseName) {
+        canvas.style.display = 'none';
+        empty.classList.add('hidden');
+        return;
+      }
+
+      // Find which exercise index this is in WORKOUT_PLAN
+      let exIndex = -1;
+      let exSession = null;
+      let hasWarmup = false;
+      for (const [session, exList] of Object.entries(WORKOUT_PLAN)) {
+        const idx = exList.findIndex((e) => e.name === exerciseName);
+        if (idx !== -1) { exIndex = idx; exSession = session; hasWarmup = !!exList[idx].warmup; break; }
+      }
+      if (exIndex === -1) return;
+
+      // Load workout history for this session (with details)
+      let history = [];
+      try {
+        const { data } = await state.supabase
+          .from('workout_logs')
+          .select('workout_date, details')
+          .eq('workout_name', exSession)
+          .order('workout_date', { ascending: true })
+          .limit(30);
+        history = data || [];
+      } catch {}
+
+      // Extract best work set weight per session
+      const points = history.map((entry) => {
+        const sets = entry.details?.[exIndex] || [];
+        const workSets = hasWarmup ? sets.slice(1) : sets;
+        const weights = workSets.map((s) => parseFloat(s.weight)).filter((n) => !isNaN(n));
+        return weights.length ? { date: entry.workout_date, weight: Math.max(...weights) } : null;
+      }).filter(Boolean);
+
+      if (points.length < 2) {
+        canvas.style.display = 'none';
+        empty.classList.remove('hidden');
+        empty.textContent = points.length === 0 ? 'No data logged yet for this exercise.' : 'Need at least 2 sessions to draw a chart.';
+        return;
+      }
+
+      empty.classList.add('hidden');
+      canvas.style.display = '';
+
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth || 448;
+      const h = 200;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+
+      const weights = points.map((p) => p.weight);
+      const minW = Math.min(...weights);
+      const maxW = Math.max(...weights);
+      const spread = Math.max(maxW - minW, 1);
+      const L = 16, R = w - 16, T = 20, B = h - 24;
+
+      // Grid lines
+      ctx.strokeStyle = '#1f1f1f'; ctx.lineWidth = 1;
+      for (let i = 0; i < 4; i++) {
+        const y = T + (i * (B - T)) / 3;
+        ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(R, y); ctx.stroke();
+      }
+
+      // Line
+      ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; ctx.beginPath();
+      points.forEach((p, idx) => {
+        const x = L + (idx / (points.length - 1)) * (R - L);
+        const y = B - ((p.weight - minW) / spread) * (B - T);
+        idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Dots
+      ctx.fillStyle = '#3b82f6';
+      points.forEach((p, idx) => {
+        const x = L + (idx / (points.length - 1)) * (R - L);
+        const y = B - ((p.weight - minW) / spread) * (B - T);
+        ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+      });
+
+      // Labels
+      ctx.fillStyle = '#9ca3af'; ctx.font = '11px Space Mono';
+      ctx.fillText(`${minW}kg`, L, h - 6);
+      ctx.fillText(`${maxW}kg`, L, 14);
+    }
+
+    // ── Gym mode ────────────────────────────────────────────────────────────
+    function applyGymMode() {
+      document.body.classList.toggle('gym-mode', state.gymMode);
+      const btn = document.getElementById('gym-mode-toggle');
+      if (btn) btn.classList.toggle('on', state.gymMode);
+    }
+
+    function toggleGymMode() {
+      state.gymMode = !state.gymMode;
+      localStorage.setItem('gymMode', state.gymMode ? '1' : '0');
+      applyGymMode();
+      showToast(state.gymMode ? 'Gym mode on' : 'Gym mode off');
+    }
+
     function setSetupMode() {
       els.setupScreen.classList.remove('hidden');
       els.appScreen.classList.add('hidden');
@@ -1380,9 +1932,13 @@ with check (true);`;
       });
       if (tab === 'progress') {
         drawWeightChart();
+        renderComplianceHeatmap();
       }
       if (tab === 'workout') {
         renderWorkoutTab();
+      }
+      if (tab === 'inject') {
+        prefillInjectForm();
       }
     }
 
@@ -1443,20 +1999,53 @@ with check (true);`;
       els.statDay.textContent = meta.complete ? '126+' : String(meta.cappedDay);
       els.statRemaining.textContent = String(meta.daysRemaining);
       els.statWeight.textContent = state.latestWeightLog?.weight_kg != null ? `${state.latestWeightLog.weight_kg}kg` : '-';
+
+      // Weight trend vs 7 days ago
+      const sevenDaysAgo = (() => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().slice(0, 10); })();
+      const weekAgoLog = state.recentLogs.find((l) => l.log_date === sevenDaysAgo);
+      const deltaEl = document.getElementById('stat-weight-delta');
+      if (deltaEl && state.latestWeightLog?.weight_kg != null && weekAgoLog?.weight_kg != null) {
+        const delta = (Number(state.latestWeightLog.weight_kg) - Number(weekAgoLog.weight_kg)).toFixed(1);
+        deltaEl.textContent = `${delta >= 0 ? '+' : ''}${delta}kg vs 7d`;
+        deltaEl.className = `stat-delta ${delta >= 0 ? 'up' : 'down'}`;
+        deltaEl.classList.remove('hidden');
+      } else if (deltaEl) {
+        deltaEl.classList.add('hidden');
+      }
+
       els.phaseBadge.textContent = getPhase(meta.cappedDay);
       els.cycleProgress.style.width = `${(meta.cappedDay / TOTAL_DAYS) * 100}%`;
       els.cycleProgressLabel.textContent = `Day ${meta.cappedDay} of ${TOTAL_DAYS}`;
 
-      // Injection alert (only weeks 1-12)
+      // Injection alert (only weeks 1-12) + next injection countdown
       const site = getInjectionSite();
+      const nextInjRow = document.getElementById('next-injection-row');
+      const nextInjText = document.getElementById('next-inj-text');
       if (site && meta.week <= 12) {
         els.injectionAlert.classList.remove('hidden');
         els.injectionAlert.classList.add('pulse');
         els.injectionAlert.textContent = `INJECTION DAY \u2014 Test Cyp 250mg + Mast E 200mg \u2192 ${site}`;
+        if (nextInjRow) nextInjRow.classList.add('hidden');
       } else {
         els.injectionAlert.classList.add('hidden');
         els.injectionAlert.classList.remove('pulse');
+        if (nextInjRow && nextInjText && meta.week <= 12) {
+          const dow = now.getDay();
+          let daysUntil = 0;
+          for (let d = 1; d <= 7; d++) {
+            if ([1, 4].includes((dow + d) % 7)) { daysUntil = d; break; }
+          }
+          const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const nextDayName = dayNames[(dow + daysUntil) % 7];
+          const label = daysUntil === 1 ? 'tomorrow' : `in ${daysUntil} days`;
+          nextInjText.textContent = `${nextDayName} \u00b7 ${label}`;
+          nextInjRow.classList.remove('hidden');
+        } else if (nextInjRow) {
+          nextInjRow.classList.add('hidden');
+        }
       }
+
+      updateNavBadges();
 
       // Build schedule
       const tasks = getDailySchedule(meta, now);
@@ -1585,6 +2174,20 @@ with check (true);`;
         }
       } catch {}
 
+      // Load previous session details for progressive overload display
+      let prevDetails = null;
+      try {
+        const { data: prevData } = await state.supabase
+          .from('workout_logs')
+          .select('workout_date, details')
+          .eq('workout_name', session)
+          .lt('workout_date', todayIso())
+          .order('workout_date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (prevData?.details) prevDetails = prevData.details;
+      } catch {}
+
       // Initialise per-exercise unit state (preserve existing choices across re-renders)
       if (state.exerciseUnits.length !== exercises.length) {
         state.exerciseUnits = exercises.map(() => 'kg');
@@ -1598,16 +2201,36 @@ with check (true);`;
         const card = document.createElement('div');
         card.className = 'exercise-card';
 
+        // Previous session summary
+        let prevHtml = '';
+        if (prevDetails?.[i]?.length) {
+          const prevSets = prevDetails[i];
+          const parts = prevSets.map((s, j) => {
+            if (!s.weight && !s.reps) return null;
+            const label = ex.warmup && j === 0 ? 'W' : `S${ex.warmup ? j : j + 1}`;
+            return `<span class="prev-session-label">${label}:</span> ${s.weight || '?'}kg×${s.reps || '?'}`;
+          }).filter(Boolean);
+          if (parts.length) prevHtml = `<div class="prev-session">Last: ${parts.join('  ')}</div>`;
+        }
+
         let setsHtml = '';
+        const setMeta = []; // { label, savedIdx }
         if (ex.warmup) {
           const val = (savedDetails?.[i]?.[0] && savedDetails[i][0].weight) || '';
           const reps = (savedDetails?.[i]?.[0] && savedDetails[i][0].reps) || '';
-          setsHtml += `<div class="set-row"><span class="set-label">W</span><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> × <input type="text" placeholder="reps" style="width:60px" value="${reps}"></div>`;
+          const key = `${i}_0`;
+          const done = state.completedSets.get(key) || false;
+          setsHtml += `<div class="set-row${done ? ' is-done' : ''}" data-key="${key}"><span class="set-label">W</span><span class="set-row-inputs"><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> × <input type="text" placeholder="reps" style="width:60px" value="${reps}"></span><button type="button" class="set-check${done ? ' checked' : ''}">✓</button></div>`;
+          setMeta.push({ key, label: 'W' });
         }
         for (let s = 1; s <= ex.sets; s++) {
-          const val = (savedDetails?.[i]?.[s] && savedDetails[i][s].weight) || '';
-          const reps = (savedDetails?.[i]?.[s] && savedDetails[i][s].reps) || '';
-          setsHtml += `<div class="set-row"><span class="set-label">S${s}</span><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> × <input type="text" placeholder="reps" style="width:60px" value="${reps}"></div>`;
+          const savedIdx = ex.warmup ? s : s - 1;
+          const val = (savedDetails?.[i]?.[savedIdx] && savedDetails[i][savedIdx].weight) || '';
+          const reps = (savedDetails?.[i]?.[savedIdx] && savedDetails[i][savedIdx].reps) || '';
+          const key = `${i}_${s}`;
+          const done = state.completedSets.get(key) || false;
+          setsHtml += `<div class="set-row${done ? ' is-done' : ''}" data-key="${key}"><span class="set-label">S${s}</span><span class="set-row-inputs"><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> × <input type="text" placeholder="reps" style="width:60px" value="${reps}"></span><button type="button" class="set-check${done ? ' checked' : ''}">✓</button></div>`;
+          setMeta.push({ key });
         }
 
         card.innerHTML = `
@@ -1618,10 +2241,11 @@ with check (true);`;
               <button type="button" class="unit-btn${unit === 'lb' ? ' active' : ''}" data-unit="lb">lb</button>
             </div>
           </div>
+          ${prevHtml}
           <div class="exercise-sets">${setsHtml}</div>
         `;
 
-        // Per-exercise unit toggle — updates placeholders without re-rendering
+        // Per-exercise unit toggle
         const kgBtn = card.querySelector('[data-unit="kg"]');
         const lbBtn = card.querySelector('[data-unit="lb"]');
         const weightInputs = card.querySelectorAll('input[type="number"]');
@@ -1633,6 +2257,19 @@ with check (true);`;
         };
         kgBtn.addEventListener('click', () => applyUnit('kg'));
         lbBtn.addEventListener('click', () => applyUnit('lb'));
+
+        // Set completion checkmarks — tap to toggle, trigger rest timer on complete
+        card.querySelectorAll('.set-check').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const row = btn.closest('.set-row');
+            const key = row.dataset.key;
+            const isDone = !state.completedSets.get(key);
+            state.completedSets.set(key, isDone);
+            btn.classList.toggle('checked', isDone);
+            row.classList.toggle('is-done', isDone);
+            if (isDone) showRestTimer();
+          });
+        });
 
         const setInputs = Array.from(card.querySelectorAll('input'));
         inputRefs.push(setInputs);
@@ -1685,13 +2322,24 @@ with check (true);`;
 
     function renderTodayLogForm() {
       const form = els.dailyLogForm;
-      form.weight_kg.value = state.todayLog?.weight_kg ?? '';
-      form.water_liters.value = state.todayLog?.water_liters ?? '';
-      form.calories.value = state.todayLog?.calories ?? '';
-      form.sleep_hours.value = state.todayLog?.sleep_hours ?? '';
-      form.notes.value = state.todayLog?.notes ?? '';
-      state.energyLevel = state.todayLog?.energy_level ?? null;
+      const log = state.todayLog;
+      form.weight_kg.value = log?.weight_kg ?? '';
+      form.water_liters.value = log?.water_liters ?? '';
+      form.calories.value = log?.calories ?? '';
+      form.sleep_hours.value = log?.sleep_hours ?? '';
+      form.notes.value = log?.notes ?? '';
+      form.systolic.value = log?.systolic ?? '';
+      form.diastolic.value = log?.diastolic ?? '';
+      form.protein_g.value = log?.protein_g ?? '';
+      form.carbs_g.value = log?.carbs_g ?? '';
+      form.fat_g.value = log?.fat_g ?? '';
+      state.energyLevel = log?.energy_level ?? null;
       els.energyLevelInput.value = state.energyLevel ?? '';
+      // Restore side effects
+      state.sideEffects = new Set(Array.isArray(log?.side_effects) ? log.side_effects : []);
+      document.querySelectorAll('.effect-btn').forEach((btn) => {
+        btn.classList.toggle('active', state.sideEffects.has(btn.dataset.effect));
+      });
       renderEnergyButtons();
     }
 
@@ -1749,12 +2397,15 @@ with check (true);`;
       }
 
       state.recentLogs.slice(0, 14).forEach((log) => {
+        const bp = (log.systolic && log.diastolic) ? `${log.systolic}/${log.diastolic}` : '-';
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${formatShortDate(log.log_date)}</td>
           <td>${log.weight_kg ?? '-'}</td>
-          <td>${log.water_liters ?? '-'}</td>
+          <td>${bp}</td>
           <td>${log.calories ?? '-'}</td>
+          <td>${log.water_liters ?? '-'}</td>
+          <td>${log.sleep_hours ?? '-'}</td>
           <td>${log.energy_level ?? '-'}</td>
         `;
         els.progressTableBody.appendChild(row);
@@ -1844,21 +2495,19 @@ with check (true);`;
 
       const [todayLogResult, recentLogsResult, recentInjectionsResult, supplementsResult, latestWeightResult, taskResult, workoutResult, todayInjectionResult, todayWorkoutResult] = await Promise.all([
         supabase.from('daily_logs').select('*').eq('log_date', today).maybeSingle(),
-        supabase.from('daily_logs').select('*').order('log_date', { ascending: false }).limit(60),
+        supabase.from('daily_logs').select('*').order('log_date', { ascending: false }).limit(130),
         supabase.from('injections').select('*').order('injection_date', { ascending: false }).limit(10),
         supabase.from('supplement_logs').select('supplement_name, taken').eq('log_date', today),
         supabase.from('daily_logs').select('weight_kg, log_date').not('weight_kg', 'is', null).order('log_date', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('task_logs').select('task_name, completed').eq('log_date', today),
-        supabase.from('workout_logs').select('*').order('workout_date', { ascending: false }).order('created_at', { ascending: false }).limit(7),
+        supabase.from('workout_logs').select('*').order('workout_date', { ascending: false }).order('created_at', { ascending: false }).limit(14),
         supabase.from('injections').select('id', { count: 'exact', head: true }).eq('injection_date', today),
         supabase.from('workout_logs').select('id', { count: 'exact', head: true }).eq('workout_date', today),
       ]);
 
       const results = [todayLogResult, recentLogsResult, recentInjectionsResult, supplementsResult, latestWeightResult, taskResult, workoutResult, todayInjectionResult, todayWorkoutResult];
       const failed = results.find((result) => result.error);
-      if (failed) {
-        throw failed.error;
-      }
+      if (failed) throw failed.error;
 
       state.todayLog = todayLogResult.data || null;
       state.recentLogs = recentLogsResult.data || [];
@@ -1962,6 +2611,12 @@ with check (true);`;
         sleep_hours: sanitizeNumber(form.sleep_hours.value),
         energy_level: sanitizeNumber(els.energyLevelInput.value),
         notes: form.notes.value.trim() || null,
+        systolic: sanitizeNumber(form.systolic.value),
+        diastolic: sanitizeNumber(form.diastolic.value),
+        protein_g: sanitizeNumber(form.protein_g.value),
+        carbs_g: sanitizeNumber(form.carbs_g.value),
+        fat_g: sanitizeNumber(form.fat_g.value),
+        side_effects: state.sideEffects.size > 0 ? [...state.sideEffects] : null,
       };
 
       const { error } = await state.supabase
@@ -2070,6 +2725,42 @@ with check (true);`;
       document.getElementById('wf-start-btn').addEventListener('click', startWorkoutTimer);
       document.getElementById('wf-end-btn').addEventListener('click', endWorkoutTimer);
       els.bottomNav.addEventListener('click', handleTabClick);
+
+      // Mark all supplements
+      document.getElementById('mark-all-supps-btn').addEventListener('click', markAllSupplements);
+
+      // Rest timer controls
+      document.getElementById('rest-skip-btn').addEventListener('click', stopRestTimer);
+      document.getElementById('rest-add-btn').addEventListener('click', () => {
+        state.restTimer.remaining = Math.min(state.restTimer.remaining + 30, 599);
+        renderRestTimerCount();
+      });
+      document.querySelectorAll('.rest-preset-btn').forEach((btn) => {
+        btn.addEventListener('click', () => startRestTimer(Number(btn.dataset.secs)));
+      });
+
+      // Gym mode toggle
+      document.getElementById('gym-mode-toggle').addEventListener('click', toggleGymMode);
+
+      // Strength chart exercise selector
+      document.getElementById('exercise-selector').addEventListener('change', (e) => {
+        if (e.target.value) renderStrengthChart(e.target.value);
+      });
+
+      // Side effects toggle buttons
+      document.getElementById('side-effects-grid').addEventListener('click', (e) => {
+        const btn = e.target.closest('.effect-btn');
+        if (!btn) return;
+        const effect = btn.dataset.effect;
+        if (state.sideEffects.has(effect)) {
+          state.sideEffects.delete(effect);
+          btn.classList.remove('active');
+        } else {
+          state.sideEffects.add(effect);
+          btn.classList.add('active');
+        }
+      });
+
       window.addEventListener('resize', () => {
         if (state.activeTab === 'progress') {
           drawWeightChart();
@@ -2080,6 +2771,7 @@ with check (true);`;
     async function boot() {
       els.sqlBlock.textContent = SQL_SNIPPET;
       bindEvents();
+      applyGymMode();
       renderEnergyButtons();
       const forceSetup = localStorage.getItem(FORCE_SETUP_KEY) === '1';
       const loadedConfig = loadConfig();
@@ -2115,6 +2807,10 @@ with check (true);`;
     }
 
     boot();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
   </script>
 </body>
 </html>
