@@ -1663,7 +1663,10 @@ with check (true);`;
         });
         const response = await fetch(FITBIT_TOKEN_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${btoa(effectiveClientId + ':')}`,
+          },
           body: body.toString(),
         });
         if (!response.ok) {
