@@ -1580,7 +1580,7 @@ with check (true);`;
     const FITBIT_AUTH_URL  = 'https://www.fitbit.com/oauth2/authorize';
     const FITBIT_TOKEN_URL = 'https://api.fitbit.com/oauth2/token';
     const FITBIT_API_BASE  = 'https://api.fitbit.com';
-    const FITBIT_SCOPES    = 'activity sleep heartrate weight';
+    const FITBIT_SCOPES    = 'activity sleep heartrate weight oxygen_saturation respiratory_rate';
 
     function getFitbitToken() {
       try {
@@ -1745,7 +1745,7 @@ with check (true);`;
           if (yestMins > 0) return yestMins;
           return todayMins ?? yestMins;
         })();
-        if (sleepData != null && sleepData > 0) {
+        if (sleepData != null) {
           synced.sleep_hours = (sleepData / 60).toFixed(1);
           chips.push({ label: 'Sleep', value: `${synced.sleep_hours}h` });
         }
@@ -1759,9 +1759,9 @@ with check (true);`;
         // Activity
         if (activityRes.status === 'fulfilled') {
           const s = activityRes.value?.summary;
-          if (s?.steps > 0) { synced.steps = s.steps; chips.push({ label: 'Steps', value: Number(s.steps).toLocaleString() }); }
-          if (s?.caloriesOut > 0) chips.push({ label: 'Calories', value: `${s.caloriesOut} kcal` });
-          if (s?.activeMinutes > 0) chips.push({ label: 'Active', value: `${s.activeMinutes}m` });
+          if (s?.steps != null) { synced.steps = s.steps; chips.push({ label: 'Steps', value: Number(s.steps).toLocaleString() }); }
+          if (s?.caloriesOut != null) chips.push({ label: 'Calories', value: `${s.caloriesOut} kcal` });
+          if (s?.activeMinutes != null) chips.push({ label: 'Active', value: `${s.activeMinutes}m` });
           if (s?.distances?.length) {
             const total = s.distances.find((d) => d.activity === 'total');
             if (total?.distance > 0) chips.push({ label: 'Distance', value: `${total.distance.toFixed(2)} km` });
