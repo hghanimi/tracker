@@ -1249,10 +1249,14 @@
           <div class="form-grid">
             <div class="field">
               <label for="fitbit-client-id">Client ID</label>
-              <input id="fitbit-client-id" type="text" placeholder="e.g. 23ABCD" autocomplete="off" spellcheck="false">
+              <input id="fitbit-client-id" type="text" placeholder="e.g. 23V5ZX" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="field">
+              <label for="fitbit-client-secret">Client Secret</label>
+              <input id="fitbit-client-secret" type="password" placeholder="Paste client secret" autocomplete="off" spellcheck="false">
               <p class="muted" style="font-size:0.75rem;margin-top:6px;">
-                Create a <strong>Personal</strong> app at <strong>dev.fitbit.com</strong>.<br>
-                Set the redirect URI to this page's URL.
+                From <strong>dev.fitbit.com</strong> → your app → OAuth 2.0 Client ID &amp; Secret.<br>
+                Redirect URI must be set to this page's URL.
               </p>
             </div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -1560,6 +1564,7 @@ with check (true);`;
         cycleStartDate: source.cycleStartDate || DEFAULT_CYCLE_START_DATE,
         name: source.name || DEFAULT_NAME,
         fitbitClientId: source.fitbitClientId || '',
+        fitbitClientSecret: source.fitbitClientSecret || '',
       };
     }
 
@@ -1619,14 +1624,16 @@ with check (true);`;
 
     async function handleFitbitConnect() {
       const input = document.getElementById('fitbit-client-id');
+      const secretInput = document.getElementById('fitbit-client-secret');
       const clientId = (input?.value || state.config?.fitbitClientId || '').trim();
+      const clientSecret = (secretInput?.value || state.config?.fitbitClientSecret || '').trim();
       if (!clientId) { showToast('Enter your Fitbit Client ID first'); return; }
 
-      saveConfig({ ...state.config, fitbitClientId: clientId });
+      saveConfig({ ...state.config, fitbitClientId: clientId, fitbitClientSecret: clientSecret });
 
       const { verifier, challenge } = await generatePKCE();
       const redirectUri = window.location.origin + window.location.pathname;
-      localStorage.setItem(FITBIT_PKCE_KEY, JSON.stringify({ verifier, redirectUri, clientId }));
+      localStorage.setItem(FITBIT_PKCE_KEY, JSON.stringify({ verifier, redirectUri, clientId, clientSecret }));
 
       const params = new URLSearchParams({
         response_type: 'code',
@@ -1661,11 +1668,12 @@ with check (true);`;
           code,
           code_verifier: verifier,
         });
+        const effectiveSecret = JSON.parse(stored).clientSecret || state.config?.fitbitClientSecret || '';
         const response = await fetch(FITBIT_TOKEN_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${btoa(effectiveClientId + ':')}`,
+            'Authorization': `Basic ${btoa(`${effectiveClientId}:${effectiveSecret}`)}`,
           },
           body: body.toString(),
         });
@@ -1780,6 +1788,8 @@ with check (true);`;
       const clientIdInput = document.getElementById('fitbit-client-id');
 
       if (clientIdInput && state.config?.fitbitClientId) clientIdInput.value = state.config.fitbitClientId;
+      const secretInput = document.getElementById('fitbit-client-secret');
+      if (secretInput && state.config?.fitbitClientSecret) secretInput.value = state.config.fitbitClientSecret;
       if (connectBtn) connectBtn.style.display = connected ? 'none' : '';
       if (disconnectBtn) disconnectBtn.style.display = connected ? '' : 'none';
       if (statusEl) {
