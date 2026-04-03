@@ -781,6 +781,42 @@
       font-weight: 600;
       font-size: 1rem;
     }
+
+    /* ── Fitbit ── */
+    .fitbit-data-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .fitbit-chip {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 72px;
+    }
+    .fitbit-chip-label {
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-family: 'Space Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .fitbit-chip span:last-child {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.88rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .fitbit-status {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
   </style>
 </head>
 <body>
@@ -970,6 +1006,14 @@
 
       <!-- LOG TAB -->
       <section id="tab-log" class="tab-screen hidden">
+        <div id="fitbit-panel" class="panel hidden">
+          <div class="section-head">
+            <h2>Fitbit</h2>
+            <button id="fitbit-sync-btn" class="btn" type="button">Sync Today</button>
+          </div>
+          <div id="fitbit-sync-status" class="fitbit-status"></div>
+          <div id="fitbit-chips" class="fitbit-data-row hidden"></div>
+        </div>
         <div class="panel">
           <h2>Daily Log</h2>
           <form id="daily-log-form" class="form-grid" autocomplete="off">
@@ -1139,6 +1183,7 @@
                   <th>💧</th>
                   <th>😴</th>
                   <th>⚡</th>
+                  <th>HR</th>
                 </tr>
               </thead>
               <tbody id="progress-table-body"></tbody>
@@ -1197,6 +1242,24 @@
               <p class="muted" style="font-size:0.82rem;margin-top:2px;">Larger text &amp; inputs for the gym</p>
             </div>
             <button id="gym-mode-toggle" class="toggle-pill" type="button"></button>
+          </div>
+        </div>
+        <div class="panel">
+          <h2 style="margin-bottom:12px;">Fitbit</h2>
+          <div class="form-grid">
+            <div class="field">
+              <label for="fitbit-client-id">Client ID</label>
+              <input id="fitbit-client-id" type="text" placeholder="e.g. 23ABCD" autocomplete="off" spellcheck="false">
+              <p class="muted" style="font-size:0.75rem;margin-top:6px;">
+                Create a <strong>Personal</strong> app at <strong>dev.fitbit.com</strong>.<br>
+                Set the redirect URI to this page's URL.
+              </p>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <button id="fitbit-connect-btn" class="btn btn-primary" type="button">Connect Fitbit</button>
+              <span id="fitbit-connect-status" class="fitbit-status"></span>
+            </div>
+            <button id="fitbit-disconnect-btn" class="btn btn-danger" type="button" style="display:none;">Disconnect Fitbit</button>
           </div>
         </div>
       </section>
@@ -1340,6 +1403,8 @@ alter table public.daily_logs add column if not exists protein_g numeric;
 alter table public.daily_logs add column if not exists carbs_g numeric;
 alter table public.daily_logs add column if not exists fat_g numeric;
 alter table public.daily_logs add column if not exists side_effects jsonb;
+alter table public.daily_logs add column if not exists steps integer;
+alter table public.daily_logs add column if not exists resting_hr integer;
 
 alter table public.daily_logs enable row level security;
 alter table public.injections enable row level security;
@@ -1409,6 +1474,7 @@ with check (true);`;
       restTimer: { intervalId: null, remaining: 90, total: 90 },
       sideEffects: new Set(),
       gymMode: localStorage.getItem('gymMode') === '1',
+      fitbitSync: null,
     };
 
     const els = {
@@ -1493,6 +1559,7 @@ with check (true);`;
         supabaseAnonKey: source.supabaseAnonKey || DEFAULT_SUPABASE_ANON_KEY,
         cycleStartDate: source.cycleStartDate || DEFAULT_CYCLE_START_DATE,
         name: source.name || DEFAULT_NAME,
+        fitbitClientId: source.fitbitClientId || '',
       };
     }
 
@@ -1501,6 +1568,224 @@ with check (true);`;
         auth: { persistSession: false, autoRefreshToken: false },
       });
     }
+
+    // ── FITBIT ────────────────────────────────────────────────────────────────
+    const FITBIT_TOKEN_KEY = 'fitbit-token';
+    const FITBIT_PKCE_KEY  = 'fitbit-pkce';
+    const FITBIT_AUTH_URL  = 'https://www.fitbit.com/oauth2/authorize';
+    const FITBIT_TOKEN_URL = 'https://api.fitbit.com/oauth2/token';
+    const FITBIT_API_BASE  = 'https://api.fitbit.com';
+    const FITBIT_SCOPES    = 'activity sleep heartrate weight';
+
+    function getFitbitToken() {
+      try {
+        const stored = localStorage.getItem(FITBIT_TOKEN_KEY);
+        if (!stored) return null;
+        const token = JSON.parse(stored);
+        if (token.expires_at && Date.now() > token.expires_at) {
+          localStorage.removeItem(FITBIT_TOKEN_KEY);
+          return null;
+        }
+        return token;
+      } catch { return null; }
+    }
+
+    function saveFitbitToken(data) {
+      localStorage.setItem(FITBIT_TOKEN_KEY, JSON.stringify({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+        expires_at: Date.now() + (data.expires_in * 1000),
+      }));
+    }
+
+    function clearFitbitToken() {
+      localStorage.removeItem(FITBIT_TOKEN_KEY);
+      localStorage.removeItem(FITBIT_PKCE_KEY);
+    }
+
+    function isFitbitConnected() { return getFitbitToken() !== null; }
+
+    async function generatePKCE() {
+      const arr = new Uint8Array(64);
+      crypto.getRandomValues(arr);
+      const verifier = btoa(String.fromCharCode(...arr))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+      const data = new TextEncoder().encode(verifier);
+      const digest = await crypto.subtle.digest('SHA-256', data);
+      const challenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+      return { verifier, challenge };
+    }
+
+    async function handleFitbitConnect() {
+      const input = document.getElementById('fitbit-client-id');
+      const clientId = (input?.value || state.config?.fitbitClientId || '').trim();
+      if (!clientId) { showToast('Enter your Fitbit Client ID first'); return; }
+
+      saveConfig({ ...state.config, fitbitClientId: clientId });
+
+      const { verifier, challenge } = await generatePKCE();
+      const redirectUri = window.location.origin + window.location.pathname;
+      localStorage.setItem(FITBIT_PKCE_KEY, JSON.stringify({ verifier, redirectUri, clientId }));
+
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        scope: FITBIT_SCOPES,
+        code_challenge: challenge,
+        code_challenge_method: 'S256',
+      });
+      window.location.href = `${FITBIT_AUTH_URL}?${params.toString()}`;
+    }
+
+    async function handleFitbitCallback() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      if (!code) return false;
+
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      const stored = localStorage.getItem(FITBIT_PKCE_KEY);
+      if (!stored) return false;
+
+      const { verifier, redirectUri, clientId } = JSON.parse(stored);
+      const effectiveClientId = clientId || state.config?.fitbitClientId;
+      if (!effectiveClientId) { showToast('Fitbit client ID missing — re-enter in Settings'); return false; }
+
+      try {
+        const body = new URLSearchParams({
+          client_id: effectiveClientId,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri,
+          code,
+          code_verifier: verifier,
+        });
+        const response = await fetch(FITBIT_TOKEN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        });
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.errors?.[0]?.message || `Token exchange failed (${response.status})`);
+        }
+        saveFitbitToken(await response.json());
+        localStorage.removeItem(FITBIT_PKCE_KEY);
+        return true;
+      } catch (err) {
+        showToast(`Fitbit auth failed: ${err.message}`);
+        return false;
+      }
+    }
+
+    async function fitbitGet(path) {
+      const token = getFitbitToken();
+      if (!token) throw new Error('Not connected — reconnect in Settings');
+      const response = await fetch(`${FITBIT_API_BASE}${path}`, {
+        headers: { Authorization: `Bearer ${token.access_token}` },
+      });
+      if (response.status === 401) {
+        clearFitbitToken();
+        renderFitbitUI();
+        throw new Error('Session expired — reconnect Fitbit in Settings');
+      }
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.errors?.[0]?.message || `Fitbit API error (${response.status})`);
+      }
+      return response.json();
+    }
+
+    async function syncFromFitbit() {
+      const btn = document.getElementById('fitbit-sync-btn');
+      const statusEl = document.getElementById('fitbit-sync-status');
+      const chipsEl = document.getElementById('fitbit-chips');
+      if (!btn) return;
+      btn.disabled = true;
+      btn.textContent = 'Syncing…';
+      if (statusEl) statusEl.textContent = 'Fetching from Fitbit…';
+      if (chipsEl) chipsEl.classList.add('hidden');
+
+      const date = todayIso();
+      try {
+        const [sleepRes, activityRes, hrRes, weightRes] = await Promise.allSettled([
+          fitbitGet(`/1/user/-/sleep/date/${date}.json`),
+          fitbitGet(`/1/user/-/activities/date/${date}.json`),
+          fitbitGet(`/1/user/-/activities/heart/date/${date}/1d.json`),
+          fitbitGet(`/1/user/-/body/weight/date/${date}.json`),
+        ]);
+
+        const synced = {};
+        const chips = [];
+
+        if (sleepRes.status === 'fulfilled') {
+          const mins = sleepRes.value?.summary?.totalMinutesAsleep;
+          if (mins != null) { synced.sleep_hours = (mins / 60).toFixed(1); chips.push({ label: 'Sleep', value: `${synced.sleep_hours}h` }); }
+        }
+        if (activityRes.status === 'fulfilled') {
+          const steps = activityRes.value?.summary?.steps;
+          if (steps != null) { synced.steps = steps; chips.push({ label: 'Steps', value: Number(steps).toLocaleString() }); }
+        }
+        if (hrRes.status === 'fulfilled') {
+          const rhr = hrRes.value?.['activities-heart']?.[0]?.value?.restingHeartRate;
+          if (rhr != null) { synced.resting_hr = rhr; chips.push({ label: 'Resting HR', value: `${rhr} bpm` }); }
+        }
+        if (weightRes.status === 'fulfilled') {
+          const weights = weightRes.value?.weight;
+          if (weights?.length) { synced.weight_kg = weights[weights.length - 1].weight; chips.push({ label: 'Weight', value: `${synced.weight_kg} kg` }); }
+        }
+
+        if (!chips.length) {
+          if (statusEl) statusEl.textContent = 'No data available for today yet — check back later.';
+          return;
+        }
+
+        const form = els.dailyLogForm;
+        if (synced.sleep_hours != null && !form.sleep_hours.value) form.sleep_hours.value = synced.sleep_hours;
+        if (synced.weight_kg != null && !form.weight_kg.value) form.weight_kg.value = synced.weight_kg;
+        state.fitbitSync = { steps: synced.steps ?? null, resting_hr: synced.resting_hr ?? null };
+
+        if (chipsEl) {
+          chipsEl.innerHTML = chips.map((c) => `<div class="fitbit-chip"><span class="fitbit-chip-label">${c.label}</span><span>${c.value}</span></div>`).join('');
+          chipsEl.classList.remove('hidden');
+        }
+        if (statusEl) statusEl.textContent = `${chips.length} metric${chips.length !== 1 ? 's' : ''} synced · review then Save Log`;
+        showToast(`Fitbit: ${chips.length} metrics synced`);
+      } catch (err) {
+        if (statusEl) statusEl.textContent = `Sync failed: ${err.message}`;
+        showToast(`Fitbit sync failed: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sync Today';
+      }
+    }
+
+    function handleFitbitDisconnect() {
+      clearFitbitToken();
+      state.fitbitSync = null;
+      renderFitbitUI();
+      showToast('Fitbit disconnected');
+    }
+
+    function renderFitbitUI() {
+      const connected = isFitbitConnected();
+      const panel = document.getElementById('fitbit-panel');
+      const connectBtn = document.getElementById('fitbit-connect-btn');
+      const disconnectBtn = document.getElementById('fitbit-disconnect-btn');
+      const statusEl = document.getElementById('fitbit-connect-status');
+      const clientIdInput = document.getElementById('fitbit-client-id');
+
+      if (clientIdInput && state.config?.fitbitClientId) clientIdInput.value = state.config.fitbitClientId;
+      if (connectBtn) connectBtn.style.display = connected ? 'none' : '';
+      if (disconnectBtn) disconnectBtn.style.display = connected ? '' : 'none';
+      if (statusEl) {
+        statusEl.textContent = connected ? 'Connected' : '';
+        statusEl.style.color = connected ? 'var(--accent)' : '';
+      }
+      if (panel) panel.classList.toggle('hidden', !connected);
+    }
+    // ── END FITBIT ────────────────────────────────────────────────────────────
 
     function todayIso() {
       return new Date().toISOString().slice(0, 10);
@@ -2054,6 +2339,7 @@ with check (true);`;
       els.bottomNav.classList.remove('hidden');
       renderHeader();
       renderSettings();
+      renderFitbitUI();
       setActiveTab(state.activeTab);
     }
 
@@ -2500,6 +2786,19 @@ with check (true);`;
         btn.classList.toggle('active', state.sideEffects.has(btn.dataset.effect));
       });
       renderEnergyButtons();
+      // Restore Fitbit chips if today's log has synced data
+      const chipsEl = document.getElementById('fitbit-chips');
+      const statusEl = document.getElementById('fitbit-sync-status');
+      if (chipsEl && (log?.steps != null || log?.resting_hr != null)) {
+        const chips = [];
+        if (log.sleep_hours != null) chips.push({ label: 'Sleep', value: `${Number(log.sleep_hours).toFixed(1)}h` });
+        if (log.resting_hr != null) chips.push({ label: 'Resting HR', value: `${log.resting_hr} bpm` });
+        if (log.steps != null) chips.push({ label: 'Steps', value: Number(log.steps).toLocaleString() });
+        chipsEl.innerHTML = chips.map((c) => `<div class="fitbit-chip"><span class="fitbit-chip-label">${c.label}</span><span>${c.value}</span></div>`).join('');
+        chipsEl.classList.remove('hidden');
+        if (statusEl) statusEl.textContent = 'Saved from Fitbit:';
+        state.fitbitSync = { steps: log.steps ?? null, resting_hr: log.resting_hr ?? null };
+      }
     }
 
     function renderInjectionList() {
@@ -2624,6 +2923,7 @@ with check (true);`;
           <td>${log.water_liters ?? '-'}</td>
           <td>${log.sleep_hours ?? '-'}</td>
           <td>${log.energy_level ?? '-'}</td>
+          <td>${log.resting_hr ?? '-'}</td>
         `;
         els.progressTableBody.appendChild(row);
       });
@@ -2894,6 +3194,8 @@ with check (true);`;
         carbs_g: sanitizeNumber(form.carbs_g.value),
         fat_g: sanitizeNumber(form.fat_g.value),
         side_effects: state.sideEffects.size > 0 ? [...state.sideEffects] : null,
+        steps: state.fitbitSync?.steps ?? null,
+        resting_hr: state.fitbitSync?.resting_hr ?? null,
       };
 
       const { error } = await state.supabase
@@ -3157,6 +3459,11 @@ with check (true);`;
       // Gym mode toggle
       document.getElementById('gym-mode-toggle').addEventListener('click', toggleGymMode);
 
+      // Fitbit
+      document.getElementById('fitbit-connect-btn')?.addEventListener('click', handleFitbitConnect);
+      document.getElementById('fitbit-disconnect-btn')?.addEventListener('click', handleFitbitDisconnect);
+      document.getElementById('fitbit-sync-btn')?.addEventListener('click', syncFromFitbit);
+
       // Strength chart exercise selector
       document.getElementById('exercise-selector').addEventListener('change', (e) => {
         if (e.target.value) renderStrengthChart(e.target.value);
@@ -3192,6 +3499,10 @@ with check (true);`;
       const forceSetup = localStorage.getItem(FORCE_SETUP_KEY) === '1';
       const loadedConfig = loadConfig();
       state.config = normalizeConfig(loadedConfig || DEFAULT_CONFIG);
+
+      // Handle Fitbit OAuth callback before anything else
+      const fitbitConnected = await handleFitbitCallback();
+      if (fitbitConnected) showToast('Fitbit connected!');
 
       if (forceSetup) {
         localStorage.removeItem(FORCE_SETUP_KEY);
