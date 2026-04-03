@@ -1719,36 +1719,81 @@ with check (true);`;
       if (chipsEl) chipsEl.classList.add('hidden');
 
       const date = todayIso();
+      // yesterday's ISO date (for sleep — Fitbit logs last night's sleep on yesterday)
+      const yesterday = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })();
+
       try {
-        const [sleepRes, activityRes, hrRes, weightRes] = await Promise.allSettled([
+        const [sleepTodayRes, sleepYestRes, activityRes, hrRes, weightRes, spo2Res, hrvRes] = await Promise.allSettled([
           fitbitGet(`/1/user/-/sleep/date/${date}.json`),
+          fitbitGet(`/1/user/-/sleep/date/${yesterday}.json`),
           fitbitGet(`/1/user/-/activities/date/${date}.json`),
           fitbitGet(`/1/user/-/activities/heart/date/${date}/1d.json`),
-          fitbitGet(`/1/user/-/body/weight/date/${date}.json`),
+          fitbitGet(`/1/user/-/body/log/weight/date/${date}.json`),
+          fitbitGet(`/1/user/-/spo2/date/${date}.json`),
+          fitbitGet(`/1/user/-/hrv/date/${date}.json`),
         ]);
 
         const synced = {};
         const chips = [];
 
-        if (sleepRes.status === 'fulfilled') {
-          const mins = sleepRes.value?.summary?.totalMinutesAsleep;
-          if (mins != null) { synced.sleep_hours = (mins / 60).toFixed(1); chips.push({ label: 'Sleep', value: `${synced.sleep_hours}h` }); }
+        // Sleep: prefer today, fall back to yesterday (covers last night's sleep)
+        const sleepData = (() => {
+          const tryRes = (r) => r.status === 'fulfilled' ? r.value?.summary?.totalMinutesAsleep : null;
+          const todayMins = tryRes(sleepTodayRes);
+          const yestMins = tryRes(sleepYestRes);
+          if (todayMins > 0) return todayMins;
+          if (yestMins > 0) return yestMins;
+          return todayMins ?? yestMins;
+        })();
+        if (sleepData != null && sleepData > 0) {
+          synced.sleep_hours = (sleepData / 60).toFixed(1);
+          chips.push({ label: 'Sleep', value: `${synced.sleep_hours}h` });
         }
+
+        // Sleep stages (if available)
+        const sleepSrc = sleepTodayRes.status === 'fulfilled' ? sleepTodayRes.value : (sleepYestRes.status === 'fulfilled' ? sleepYestRes.value : null);
+        const stages = sleepSrc?.summary?.stages;
+        if (stages?.deep != null) chips.push({ label: 'Deep', value: `${Math.round(stages.deep)}m` });
+        if (stages?.rem != null) chips.push({ label: 'REM', value: `${Math.round(stages.rem)}m` });
+
+        // Activity
         if (activityRes.status === 'fulfilled') {
-          const steps = activityRes.value?.summary?.steps;
-          if (steps != null) { synced.steps = steps; chips.push({ label: 'Steps', value: Number(steps).toLocaleString() }); }
+          const s = activityRes.value?.summary;
+          if (s?.steps > 0) { synced.steps = s.steps; chips.push({ label: 'Steps', value: Number(s.steps).toLocaleString() }); }
+          if (s?.caloriesOut > 0) chips.push({ label: 'Calories', value: `${s.caloriesOut} kcal` });
+          if (s?.activeMinutes > 0) chips.push({ label: 'Active', value: `${s.activeMinutes}m` });
+          if (s?.distances?.length) {
+            const total = s.distances.find((d) => d.activity === 'total');
+            if (total?.distance > 0) chips.push({ label: 'Distance', value: `${total.distance.toFixed(2)} km` });
+          }
         }
+
+        // Resting HR
         if (hrRes.status === 'fulfilled') {
           const rhr = hrRes.value?.['activities-heart']?.[0]?.value?.restingHeartRate;
           if (rhr != null) { synced.resting_hr = rhr; chips.push({ label: 'Resting HR', value: `${rhr} bpm` }); }
         }
+
+        // Weight
         if (weightRes.status === 'fulfilled') {
-          const weights = weightRes.value?.weight;
-          if (weights?.length) { synced.weight_kg = weights[weights.length - 1].weight; chips.push({ label: 'Weight', value: `${synced.weight_kg} kg` }); }
+          const ws = weightRes.value?.weight;
+          if (ws?.length) { synced.weight_kg = ws[ws.length - 1].weight; chips.push({ label: 'Weight', value: `${synced.weight_kg} kg` }); }
+        }
+
+        // SpO2
+        if (spo2Res.status === 'fulfilled') {
+          const avg = spo2Res.value?.value?.avg ?? spo2Res.value?.averages?.spo2;
+          if (avg != null) chips.push({ label: 'SpO2', value: `${avg.toFixed(1)}%` });
+        }
+
+        // HRV (RMSSD — recovery indicator, very useful on cycle)
+        if (hrvRes.status === 'fulfilled') {
+          const rmssd = hrvRes.value?.hrv?.[0]?.value?.dailyRmssd ?? hrvRes.value?.hrv?.[0]?.value?.rmssd;
+          if (rmssd != null) chips.push({ label: 'HRV', value: `${Math.round(rmssd)} ms` });
         }
 
         if (!chips.length) {
-          if (statusEl) statusEl.textContent = 'No data available for today yet — check back later.';
+          if (statusEl) statusEl.textContent = 'No data yet — open your Fitbit app to sync your device first, then try again.';
           return;
         }
 
