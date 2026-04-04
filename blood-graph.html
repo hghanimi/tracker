@@ -359,6 +359,62 @@ const SummaryCard = ({ todayData, cycleDay, todayH, ssDays, winClearDays }) => (
   </div>
 );
 
+// ─── BLOODWORK GUIDANCE ──────────────────────────────────────────
+
+const BloodworkCard = ({ midStart, midEnd, lastPin, offCheck, fullClear }) => (
+  <div style={{
+    background: CLR.panel,
+    border: `1px solid ${CLR.border}`,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+  }}>
+    <div style={{
+      color: CLR.muted,
+      fontSize: 10,
+      textTransform: 'uppercase',
+      letterSpacing: '0.08em',
+      marginBottom: 8,
+      fontWeight: 700,
+      fontFamily: 'Space Mono, monospace',
+    }}>
+      Bloodwork Timing (Estimate)
+    </div>
+
+    <div style={{ display: 'grid', gap: 8 }}>
+      <div style={{ fontSize: 11, color: CLR.text, lineHeight: 1.5 }}>
+        <b style={{ color: CLR.today }}>On-cycle check:</b> {midStart} to {midEnd}, ideally
+        36-48h after a shot for a mid-interval value.
+      </div>
+      <div style={{ fontSize: 11, color: CLR.text, lineHeight: 1.5 }}>
+        <b style={{ color: CLR.winny }}>Last injection:</b> {lastPin}. For near-baseline labs,
+        draw around {offCheck} (about 8 weeks off).
+      </div>
+      <div style={{ fontSize: 11, color: CLR.text, lineHeight: 1.5 }}>
+        <b style={{ color: CLR.mast }}>Conservative clearance:</b> around {fullClear}
+        (about 10 weeks off long esters).
+      </div>
+    </div>
+
+    <div style={{
+      marginTop: 10,
+      paddingTop: 10,
+      borderTop: `1px solid ${CLR.border2}`,
+      display: 'grid',
+      gap: 5,
+      fontSize: 11,
+      lineHeight: 1.5,
+      color: CLR.muted2,
+    }}>
+      <div><b style={{ color: CLR.test }}>Expected total testosterone (TT):</b></div>
+      <div>• On this protocol, TT is often above standard lab range (&gt;1500 ng/dL).</div>
+      <div>• Mid-interval draw commonly lands around ~1500-3500 ng/dL.</div>
+      <div>• Peak-proximal draw may read much higher (~2500-5500+ ng/dL).</div>
+      <div style={{ color: CLR.muted }}>Use this as an estimate only; individual metabolism and SHBG can shift results a lot.</div>
+    </div>
+  </div>
+);
+
 // ─── TOGGLE BAR ───────────────────────────────────────────────────
 
 const ToggleBar = ({ vis, setVis }) => {
@@ -543,6 +599,13 @@ function BloodSaturationGraph() {
 
   // Injection day markers (within cycle only)
   const injLines = injH.filter(h => h <= phase2H);
+  const lastInjH = injH[injH.length - 1] ?? 0;
+
+  // Suggested lab windows for this schedule.
+  const midStartH  = 6 * 7 * 24;
+  const midEndH    = 8 * 7 * 24;
+  const offCheckH  = lastInjH + 56 * 24; // ~8 weeks off
+  const fullClearH = lastInjH + 70 * 24; // ~10 weeks off
 
   // Right axis: converts saturation % → Test Cyp mg equivalent
   const rightFmt = useCallback(
@@ -620,6 +683,14 @@ function BloodSaturationGraph() {
         todayH={todayH}
         ssDays={ssDays}
         winClearDays={winClearDays}
+      />
+
+      <BloodworkCard
+        midStart={fmtFull(midStartH)}
+        midEnd={fmtFull(midEndH)}
+        lastPin={fmtFull(lastInjH)}
+        offCheck={fmtFull(offCheckH)}
+        fullClear={fmtFull(fullClearH)}
       />
 
       {/* ── Compound toggles ── */}
