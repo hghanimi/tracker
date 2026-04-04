@@ -1037,48 +1037,12 @@
               <input id="water-liters" name="water_liters" type="number" step="0.1" min="0">
             </div>
             <div class="field">
-              <label for="calories">Calories</label>
-              <input id="calories" name="calories" type="number" min="0">
-            </div>
-            <div class="field">
               <label for="sleep-hours">Sleep (hrs)</label>
               <input id="sleep-hours" name="sleep_hours" type="number" step="0.1" min="0">
             </div>
             <div class="field">
               <label for="notes">Notes</label>
               <textarea id="notes" name="notes" rows="2" maxlength="200" placeholder="Optional"></textarea>
-            </div>
-            <div class="field">
-              <label>Energy Level (1–10)</label>
-              <div id="energy-grid" class="energy-grid"></div>
-              <input id="energy-level" name="energy_level" type="number" min="1" max="10" style="display:none;">
-            </div>
-            <div class="two-col">
-              <div class="field">
-                <label for="systolic">Systolic (mmHg)</label>
-                <input id="systolic" name="systolic" type="number" min="60" max="220" placeholder="e.g. 120">
-              </div>
-              <div class="field">
-                <label for="diastolic">Diastolic (mmHg)</label>
-                <input id="diastolic" name="diastolic" type="number" min="40" max="140" placeholder="e.g. 80">
-              </div>
-            </div>
-            <div class="field">
-              <label>Macros</label>
-              <div class="three-col">
-                <div class="field">
-                  <label for="protein-g">Protein (g)</label>
-                  <input id="protein-g" name="protein_g" type="number" min="0" placeholder="g">
-                </div>
-                <div class="field">
-                  <label for="carbs-g">Carbs (g)</label>
-                  <input id="carbs-g" name="carbs_g" type="number" min="0" placeholder="g">
-                </div>
-                <div class="field">
-                  <label for="fat-g">Fat (g)</label>
-                  <input id="fat-g" name="fat_g" type="number" min="0" placeholder="g">
-                </div>
-              </div>
             </div>
             <div class="field">
               <label>Side Effects <span class="muted" style="font-size:0.75rem;">(tap to flag)</span></label>
@@ -1198,11 +1162,8 @@
                 <tr>
                   <th>Date</th>
                   <th>kg</th>
-                  <th>BP</th>
-                  <th>Kcal</th>
                   <th>💧</th>
                   <th>😴</th>
-                  <th>⚡</th>
                   <th>HR</th>
                 </tr>
               </thead>
@@ -1490,7 +1451,6 @@ with check (true);`;
       todayInjectionCount: 0,
       todaySupplements: new Map(),
       todayTasks: new Map(),
-      energyLevel: null,
       loading: false,
       exerciseUnits: [],
       completedSets: new Map(),
@@ -1539,8 +1499,6 @@ with check (true);`;
       suppsPanel: document.getElementById('supps-panel'),
       supplementList: document.getElementById('supplement-list'),
       supplementCount: document.getElementById('supplement-count'),
-      energyGrid: document.getElementById('energy-grid'),
-      energyLevelInput: document.getElementById('energy-level'),
       workoutForm: document.getElementById('workout-form'),
       recentWorkouts: document.getElementById('recent-workouts'),
       recentInjections: document.getElementById('recent-injections'),
@@ -2535,23 +2493,6 @@ with check (true);`;
       els.headerDate.textContent = formatLongDate();
     }
 
-    function renderEnergyButtons() {
-      els.energyGrid.innerHTML = '';
-      for (let level = 1; level <= 10; level += 1) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'energy-btn';
-        button.textContent = String(level);
-        button.classList.toggle('active', Number(state.energyLevel) === level);
-        button.addEventListener('click', () => {
-          state.energyLevel = level;
-          els.energyLevelInput.value = String(level);
-          renderEnergyButtons();
-        });
-        els.energyGrid.appendChild(button);
-      }
-    }
-
     function renderToday() {
       const meta = getCycleMeta();
       const now = new Date();
@@ -2937,22 +2878,13 @@ with check (true);`;
       const log = state.todayLog;
       form.weight_kg.value = log?.weight_kg ?? '';
       form.water_liters.value = log?.water_liters ?? '';
-      form.calories.value = log?.calories ?? '';
       form.sleep_hours.value = log?.sleep_hours ?? '';
       form.notes.value = log?.notes ?? '';
-      form.systolic.value = log?.systolic ?? '';
-      form.diastolic.value = log?.diastolic ?? '';
-      form.protein_g.value = log?.protein_g ?? '';
-      form.carbs_g.value = log?.carbs_g ?? '';
-      form.fat_g.value = log?.fat_g ?? '';
-      state.energyLevel = log?.energy_level ?? null;
-      els.energyLevelInput.value = state.energyLevel ?? '';
       // Restore side effects
       state.sideEffects = new Set(Array.isArray(log?.side_effects) ? log.side_effects : []);
       document.querySelectorAll('.effect-btn').forEach((btn) => {
         btn.classList.toggle('active', state.sideEffects.has(btn.dataset.effect));
       });
-      renderEnergyButtons();
       // Restore Fitbit chips if today's log has synced data
       const chipsEl = document.getElementById('fitbit-chips');
       const statusEl = document.getElementById('fitbit-sync-status');
@@ -3080,16 +3012,12 @@ with check (true);`;
       }
 
       state.recentLogs.slice(0, 14).forEach((log) => {
-        const bp = (log.systolic && log.diastolic) ? `${log.systolic}/${log.diastolic}` : '-';
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${formatShortDate(log.log_date)}</td>
           <td>${log.weight_kg ?? '-'}</td>
-          <td>${bp}</td>
-          <td>${log.calories ?? '-'}</td>
           <td>${log.water_liters ?? '-'}</td>
           <td>${log.sleep_hours ?? '-'}</td>
-          <td>${log.energy_level ?? '-'}</td>
           <td>${log.resting_hr ?? '-'}</td>
         `;
         els.progressTableBody.appendChild(row);
@@ -3123,8 +3051,8 @@ with check (true);`;
       }
 
       // For each day in recentLogs, we don't have supplement detail per day in state.
-      // Use recentLogs energy_level as proxy for "logged day" — mark days that have
-      // any log entry. A separate supp fetch would need an extra query; instead draw
+      // Use presence of a daily log entry as proxy for "logged day". A separate
+      // supplement-history fetch would need an extra query; instead draw
       // a 7-day rolling bar of days that have a daily log (proxy for routine compliance).
       // We colour bars by whether the day has a log entry at all.
       const left = 8, right = width - 8, top = 16, bottom = height - 22;
@@ -3351,15 +3279,8 @@ with check (true);`;
         log_date: todayIso(),
         weight_kg: sanitizeNumber(form.weight_kg.value),
         water_liters: sanitizeNumber(form.water_liters.value),
-        calories: sanitizeNumber(form.calories.value),
         sleep_hours: sanitizeNumber(form.sleep_hours.value),
-        energy_level: sanitizeNumber(els.energyLevelInput.value),
         notes: form.notes.value.trim() || null,
-        systolic: sanitizeNumber(form.systolic.value),
-        diastolic: sanitizeNumber(form.diastolic.value),
-        protein_g: sanitizeNumber(form.protein_g.value),
-        carbs_g: sanitizeNumber(form.carbs_g.value),
-        fat_g: sanitizeNumber(form.fat_g.value),
         side_effects: state.sideEffects.size > 0 ? [...state.sideEffects] : null,
         steps: state.fitbitSync?.steps ?? null,
         resting_hr: state.fitbitSync?.resting_hr ?? null,
@@ -3509,13 +3430,7 @@ with check (true);`;
         lines.push(`Date:        ${t.log_date}`);
         if (t.weight_kg)    lines.push(`Weight:      ${t.weight_kg} kg`);
         if (t.sleep_hours)  lines.push(`Sleep:       ${t.sleep_hours} hrs`);
-        if (t.energy_level) lines.push(`Energy:      ${t.energy_level} / 10`);
         if (t.water_liters) lines.push(`Water:       ${t.water_liters} L`);
-        if (t.calories)     lines.push(`Calories:    ${t.calories} kcal`);
-        if (t.protein_g)    lines.push(`Protein:     ${t.protein_g} g`);
-        if (t.carbs_g)      lines.push(`Carbs:       ${t.carbs_g} g`);
-        if (t.fat_g)        lines.push(`Fat:         ${t.fat_g} g`);
-        if (t.systolic && t.diastolic) lines.push(`Blood P:     ${t.systolic}/${t.diastolic} mmHg`);
         if (t.side_effects?.length) lines.push(`Side FX:     ${t.side_effects.join(', ')}`);
         if (t.notes)        lines.push(`Notes:       ${t.notes}`);
       } else {
@@ -3530,10 +3445,7 @@ with check (true);`;
           const parts = [];
           if (l.weight_kg)    parts.push(`weight ${l.weight_kg}kg`);
           if (l.sleep_hours)  parts.push(`sleep ${l.sleep_hours}h`);
-          if (l.energy_level) parts.push(`energy ${l.energy_level}/10`);
-          if (l.calories)     parts.push(`${l.calories}kcal`);
-          if (l.protein_g)    parts.push(`P:${l.protein_g}g`);
-          if (l.systolic)     parts.push(`BP ${l.systolic}/${l.diastolic}`);
+          if (l.water_liters) parts.push(`water ${l.water_liters}L`);
           if (l.side_effects?.length) parts.push(`[${l.side_effects.join('+')}]`);
           lines.push(`${l.log_date}  ${parts.join('  ') || '(no metrics)'}`);
           if (l.notes) lines.push(`  → ${l.notes}`);
@@ -3688,7 +3600,6 @@ with check (true);`;
       els.sqlBlock.textContent = SQL_SNIPPET;
       bindEvents();
       applyGymMode();
-      renderEnergyButtons();
       const forceSetup = localStorage.getItem(FORCE_SETUP_KEY) === '1';
       const loadedConfig = loadConfig();
       state.config = normalizeConfig(loadedConfig || DEFAULT_CONFIG);
