@@ -1128,8 +1128,8 @@
           <canvas id="weight-chart" style="width: 100%; height: 220px;"></canvas>
         </div>
         <div class="panel">
-          <h2 style="margin-bottom: 4px;">Supplement Compliance</h2>
-          <p class="muted" style="font-size:0.8rem;margin-bottom:12px;">% of daily supps taken · last 30 days</p>
+          <h2 style="margin-bottom: 4px;">Daily Compliance Trend</h2>
+          <p class="muted" style="font-size:0.8rem;margin-bottom:12px;">Weighted daily compliance score (0-100) · last 30 days</p>
           <canvas id="supp-chart" style="width:100%;height:160px;"></canvas>
         </div>
         <div class="panel">
@@ -1451,6 +1451,8 @@ with check (true);`;
       todayInjectionCount: 0,
       todaySupplements: new Map(),
       todayTasks: new Map(),
+      supplementHistoryByDate: new Map(),
+      taskHistoryByDate: new Map(),
       loading: false,
       exerciseUnits: [],
       completedSets: new Map(),
@@ -2046,25 +2048,50 @@ with check (true);`;
     }
 
     function calculateComplianceScore(meta, date = new Date()) {
+      if (meta.rawDay < 1) {
+        return {
+          total: null,
+          components: [],
+          activeWeight: 0,
+        };
+      }
+
+      const dateStr = localDateStr(date);
+      const isToday = dateStr === todayIso();
       const dow = date.getDay();
       const workoutNames = { 0: 'Pull B', 3: 'Push A', 4: 'Pull B', 6: 'Push A', 1: 'Legs C' };
       const plannedWorkout = workoutNames[dow] || null;
       const plannedInjection = [1, 4].includes(dow) && meta.week <= 12;
 
+      const supplementMap = isToday
+        ? state.todaySupplements
+        : (state.supplementHistoryByDate.get(dateStr) || new Map());
+
+      const taskMap = isToday
+        ? state.todayTasks
+        : (state.taskHistoryByDate.get(dateStr) || new Map());
+
       const supplements = getSupplements(meta).map((s) => s.name);
-      const supplementTaken = supplements.filter((name) => state.todaySupplements.get(name) === true).length;
+      const supplementTaken = supplements.filter((name) => supplementMap.get(name) === true).length;
       const supplementPct = supplements.length ? (supplementTaken / supplements.length) * 100 : null;
 
       const winnySupps = supplements.filter((name) => name.includes('Winstrol'));
-      const winnyTaken = winnySupps.filter((name) => state.todaySupplements.get(name) === true).length;
+      const winnyTaken = winnySupps.filter((name) => supplementMap.get(name) === true).length;
       const winnyPct = winnySupps.length ? (winnyTaken / winnySupps.length) * 100 : null;
 
       const tasks = getDailySchedule(meta, date);
-      const taskDone = tasks.filter((t) => state.todayTasks.get(t.name) === true).length;
+      const taskDone = tasks.filter((t) => taskMap.get(t.name) === true).length;
       const taskPct = tasks.length ? (taskDone / tasks.length) * 100 : 0;
 
-      const injectionPct = plannedInjection ? (state.todayInjectionCount > 0 ? 100 : 0) : null;
-      const workoutPct = plannedWorkout ? (state.todayWorkoutCount > 0 ? 100 : 0) : null;
+      const injectionDone = isToday
+        ? (state.todayInjectionCount > 0)
+        : state.recentInjections.some((i) => i.injection_date === dateStr);
+      const workoutDone = isToday
+        ? (state.todayWorkoutCount > 0)
+        : state.recentWorkouts.some((w) => w.workout_date === dateStr);
+
+      const injectionPct = plannedInjection ? (injectionDone ? 100 : 0) : null;
+      const workoutPct = plannedWorkout ? (workoutDone ? 100 : 0) : null;
 
       const components = [
         { key: 'injection', label: 'Injection', weight: 30, pct: injectionPct },
@@ -2079,7 +2106,7 @@ with check (true);`;
       const weighted = active.reduce((sum, c) => sum + (c.pct * c.weight), 0) / weightTotal;
 
       return {
-        total: Math.round(weighted),
+        total: active.length ? Math.round(weighted) : null,
         components,
         activeWeight: weightTotal,
       };
@@ -2089,6 +2116,11 @@ with check (true);`;
       if (!els.complianceScore || !els.complianceBreakdown) return;
       const result = calculateComplianceScore(meta, date);
       const total = result.total;
+      if (total == null) {
+        els.complianceScore.textContent = 'N/A';
+        els.complianceBreakdown.textContent = 'No active cycle day for score calculation.';
+        return;
+      }
       const badge = `${total}/100`;
       els.complianceScore.textContent = badge;
 
@@ -3039,49 +3071,89 @@ with check (true);`;
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, width, height);
 
-      // Build per-day compliance from supplement_logs in recentLogs dates
-      // Use recentLogs dates (up to 30) and check supplement_logs via state
-      // We'll fetch supplement data grouped by date from state.recentLogs dates
-      const days = state.recentLogs.slice(0, 30).map((l) => l.log_date).reverse();
-      if (days.length < 2) {
+      // Build a 30-day daily compliance trend using the weighted score algorithm.
+      const days = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        days.push(d);
+      }
+
+      const points = days.map((d) => {
+        const meta = getCycleMeta(d);
+        const score = calculateComplianceScore(meta, d).total;
+        return {
+          date: d,
+          score: score == null ? null : score,
+        };
+      });
+
+      const scored = points.filter((p) => p.score != null);
+      if (scored.length < 2) {
         ctx.fillStyle = '#9ca3af';
         ctx.font = '12px Space Mono';
-        ctx.fillText('Need more data', 16, height / 2);
+        ctx.fillText('Need more compliance data', 16, height / 2);
         return;
       }
 
-      // For each day in recentLogs, we don't have supplement detail per day in state.
-      // Use presence of a daily log entry as proxy for "logged day". A separate
-      // supplement-history fetch would need an extra query; instead draw
-      // a 7-day rolling bar of days that have a daily log (proxy for routine compliance).
-      // We colour bars by whether the day has a log entry at all.
-      const left = 8, right = width - 8, top = 16, bottom = height - 22;
-      const barW = Math.max(2, Math.floor((right - left) / days.length) - 2);
-      const todayStr = todayIso();
+      const left = 14;
+      const right = width - 12;
+      const top = 16;
+      const bottom = height - 24;
 
-      days.forEach((dateStr, i) => {
-        const x = left + i * ((right - left) / days.length);
-        const isToday = dateStr === todayStr;
-        // colour: green = has log, grey = no full log
-        ctx.fillStyle = isToday ? '#22c55e' : '#16a34a';
-        ctx.globalAlpha = isToday ? 1 : 0.65;
+      // Y grid lines and labels at 0/50/100.
+      ctx.strokeStyle = '#1f1f1f';
+      ctx.lineWidth = 1;
+      [0, 50, 100].forEach((v) => {
+        const y = bottom - (v / 100) * (bottom - top);
         ctx.beginPath();
-        ctx.roundRect(x, top + 4, barW, bottom - top - 4, 3);
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+      });
+
+      // Draw compliance line.
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      scored.forEach((p, i) => {
+        const x = left + i * ((right - left) / (scored.length - 1));
+        const y = bottom - (p.score / 100) * (bottom - top);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // Draw dots.
+      ctx.fillStyle = '#22c55e';
+      scored.forEach((p, i) => {
+        const x = left + i * ((right - left) / (scored.length - 1));
+        const y = bottom - (p.score / 100) * (bottom - top);
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
         ctx.fill();
-        ctx.globalAlpha = 1;
       });
 
       // X-axis labels every ~7 bars
       ctx.fillStyle = '#6b7280';
       ctx.font = `${Math.round(9 * dpr) / dpr}px Space Mono`;
       ctx.textAlign = 'center';
-      days.forEach((dateStr, i) => {
-        if (i % 7 === 0 || i === days.length - 1) {
-          const x = left + i * ((right - left) / days.length) + barW / 2;
-          const d = new Date(`${dateStr}T00:00:00`);
+      scored.forEach((p, i) => {
+        if (i % 7 === 0 || i === scored.length - 1) {
+          const x = left + i * ((right - left) / (scored.length - 1));
+          const d = p.date;
           ctx.fillText(`${d.getMonth() + 1}/${d.getDate()}`, x, height - 4);
         }
       });
+
+      // Current score label.
+      const latest = scored[scored.length - 1];
+      if (latest?.score != null) {
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = `${Math.round(10 * dpr) / dpr}px Space Mono`;
+        ctx.fillText(`Today: ${latest.score}/100`, left, 12);
+      }
     }
 
     function drawWeightChart() {
@@ -3164,20 +3236,27 @@ with check (true);`;
     async function fetchDashboardData() {
       const today = todayIso();
       const supabase = state.supabase;
+      const historyStart = (() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 40);
+        return d.toISOString().slice(0, 10);
+      })();
 
-      const [todayLogResult, recentLogsResult, recentInjectionsResult, supplementsResult, latestWeightResult, taskResult, workoutResult, todayInjectionResult, todayWorkoutResult] = await Promise.all([
+      const [todayLogResult, recentLogsResult, recentInjectionsResult, supplementsResult, supplementHistoryResult, latestWeightResult, taskResult, taskHistoryResult, workoutResult, todayInjectionResult, todayWorkoutResult] = await Promise.all([
         supabase.from('daily_logs').select('*').eq('log_date', today).maybeSingle(),
         supabase.from('daily_logs').select('*').order('log_date', { ascending: false }).limit(130),
         supabase.from('injections').select('*').order('injection_date', { ascending: false }).limit(50),
         supabase.from('supplement_logs').select('supplement_name, taken').eq('log_date', today),
+        supabase.from('supplement_logs').select('log_date, supplement_name, taken').gte('log_date', historyStart),
         supabase.from('daily_logs').select('weight_kg, log_date').not('weight_kg', 'is', null).order('log_date', { ascending: false }).limit(1).maybeSingle(),
         supabase.from('task_logs').select('task_name, completed').eq('log_date', today),
-        supabase.from('workout_logs').select('*').order('workout_date', { ascending: false }).order('created_at', { ascending: false }).limit(14),
+        supabase.from('task_logs').select('log_date, task_name, completed').gte('log_date', historyStart),
+        supabase.from('workout_logs').select('*').order('workout_date', { ascending: false }).order('created_at', { ascending: false }).limit(80),
         supabase.from('injections').select('id', { count: 'exact', head: true }).eq('injection_date', today),
         supabase.from('workout_logs').select('id', { count: 'exact', head: true }).eq('workout_date', today),
       ]);
 
-      const results = [todayLogResult, recentLogsResult, recentInjectionsResult, supplementsResult, latestWeightResult, taskResult, workoutResult, todayInjectionResult, todayWorkoutResult];
+      const results = [todayLogResult, recentLogsResult, recentInjectionsResult, supplementsResult, supplementHistoryResult, latestWeightResult, taskResult, taskHistoryResult, workoutResult, todayInjectionResult, todayWorkoutResult];
       const failed = results.find((result) => result.error);
       if (failed) throw failed.error;
 
@@ -3188,6 +3267,21 @@ with check (true);`;
       state.latestWeightLog = latestWeightResult.data || null;
       state.todaySupplements = new Map((supplementsResult.data || []).map((item) => [item.supplement_name, item.taken]));
       state.todayTasks = new Map((taskResult.data || []).map((item) => [item.task_name, item.completed]));
+
+      const suppMapByDate = new Map();
+      (supplementHistoryResult.data || []).forEach((row) => {
+        if (!suppMapByDate.has(row.log_date)) suppMapByDate.set(row.log_date, new Map());
+        suppMapByDate.get(row.log_date).set(row.supplement_name, row.taken);
+      });
+      state.supplementHistoryByDate = suppMapByDate;
+
+      const taskMapByDate = new Map();
+      (taskHistoryResult.data || []).forEach((row) => {
+        if (!taskMapByDate.has(row.log_date)) taskMapByDate.set(row.log_date, new Map());
+        taskMapByDate.get(row.log_date).set(row.task_name, row.completed);
+      });
+      state.taskHistoryByDate = taskMapByDate;
+
       state.todayInjectionCount = todayInjectionResult.count || 0;
       state.todayWorkoutCount = todayWorkoutResult.count || 0;
     }
@@ -3220,6 +3314,9 @@ with check (true);`;
       }
 
       state.todaySupplements.set(name, taken);
+      const today = todayIso();
+      if (!state.supplementHistoryByDate.has(today)) state.supplementHistoryByDate.set(today, new Map());
+      state.supplementHistoryByDate.get(today).set(name, taken);
       renderToday();
       showToast(taken ? 'Supplement logged' : 'Supplement unchecked');
     }
@@ -3237,6 +3334,9 @@ with check (true);`;
       }
 
       state.todayTasks.set(name, completed);
+      const today = todayIso();
+      if (!state.taskHistoryByDate.has(today)) state.taskHistoryByDate.set(today, new Map());
+      state.taskHistoryByDate.get(today).set(name, completed);
       renderToday();
       showToast(completed ? 'Task complete' : 'Task reopened');
     }
