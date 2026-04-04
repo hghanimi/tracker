@@ -1499,6 +1499,7 @@ with check (true);`;
       sideEffects: new Set(),
       gymMode: localStorage.getItem('gymMode') === '1',
       fitbitSync: null,
+      fitbitAutoSyncTimer: null,
     };
 
     const els = {
@@ -1732,14 +1733,15 @@ with check (true);`;
       return response.json();
     }
 
-    async function syncFromFitbit() {
+    async function syncFromFitbit(options = {}) {
+      const { silent = false } = options;
       const btn = document.getElementById('fitbit-sync-btn');
       const statusEl = document.getElementById('fitbit-sync-status');
       const chipsEl = document.getElementById('fitbit-chips');
       if (!btn) return;
       btn.disabled = true;
-      btn.textContent = 'Syncing…';
-      if (statusEl) statusEl.textContent = 'Fetching from Fitbit…';
+      if (!silent) btn.textContent = 'Syncing…';
+      if (statusEl && !silent) statusEl.textContent = 'Fetching from Fitbit…';
       if (chipsEl) chipsEl.classList.add('hidden');
 
       const date = todayIso();
@@ -1817,7 +1819,7 @@ with check (true);`;
         }
 
         if (!chips.length) {
-          if (statusEl) statusEl.textContent = 'No data yet — open your Fitbit app to sync your device first, then try again.';
+          if (statusEl && !silent) statusEl.textContent = 'No data yet — open your Fitbit app to sync your device first, then try again.';
           return;
         }
 
@@ -1830,19 +1832,39 @@ with check (true);`;
           chipsEl.innerHTML = chips.map((c) => `<div class="fitbit-chip"><span class="fitbit-chip-label">${c.label}</span><span>${c.value}</span></div>`).join('');
           chipsEl.classList.remove('hidden');
         }
-        if (statusEl) statusEl.textContent = `${chips.length} metric${chips.length !== 1 ? 's' : ''} synced · review then Save Log`;
-        showToast(`Fitbit: ${chips.length} metrics synced`);
+        if (statusEl && !silent) statusEl.textContent = `${chips.length} metric${chips.length !== 1 ? 's' : ''} synced · review then Save Log`;
+        if (!silent) showToast(`Fitbit: ${chips.length} metrics synced`);
       } catch (err) {
-        if (statusEl) statusEl.textContent = `Sync failed: ${err.message}`;
-        showToast(`Fitbit sync failed: ${err.message}`);
+        if (statusEl && !silent) statusEl.textContent = `Sync failed: ${err.message}`;
+        if (!silent) showToast(`Fitbit sync failed: ${err.message}`);
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Sync Today';
+        if (!silent) btn.textContent = 'Sync Today';
       }
+    }
+
+    function stopFitbitAutoSync() {
+      if (state.fitbitAutoSyncTimer) {
+        clearInterval(state.fitbitAutoSyncTimer);
+        state.fitbitAutoSyncTimer = null;
+      }
+    }
+
+    function startFitbitAutoSync() {
+      stopFitbitAutoSync();
+      if (!isFitbitConnected()) return;
+
+      // Run one silent sync now and then every 3 hours.
+      syncFromFitbit({ silent: true }).catch(() => {});
+      state.fitbitAutoSyncTimer = setInterval(() => {
+        if (document.hidden) return;
+        syncFromFitbit({ silent: true }).catch(() => {});
+      }, 3 * 60 * 60 * 1000);
     }
 
     function handleFitbitDisconnect() {
       clearFitbitToken();
+      stopFitbitAutoSync();
       state.fitbitSync = null;
       renderFitbitUI();
       showToast('Fitbit disconnected');
@@ -1866,6 +1888,8 @@ with check (true);`;
         statusEl.style.color = connected ? 'var(--accent)' : '';
       }
       if (panel) panel.classList.toggle('hidden', !connected);
+      if (connected) startFitbitAutoSync();
+      else stopFitbitAutoSync();
     }
     // ── END FITBIT ────────────────────────────────────────────────────────────
 
@@ -3323,7 +3347,7 @@ with check (true);`;
     async function handleDailyLogSubmit(event) {
       event.preventDefault();
       const form = event.currentTarget;
-      const payload = {
+      const payloadBase = {
         log_date: todayIso(),
         weight_kg: sanitizeNumber(form.weight_kg.value),
         water_liters: sanitizeNumber(form.water_liters.value),
@@ -3341,11 +3365,29 @@ with check (true);`;
         resting_hr: state.fitbitSync?.resting_hr ?? null,
       };
 
-      const { error } = await state.supabase
+      let { error } = await state.supabase
         .from('daily_logs')
-        .upsert(payload, { onConflict: 'log_date' })
+        .upsert(payloadBase, { onConflict: 'log_date' })
         .select()
         .single();
+
+      // Fallback for workspaces where Fitbit columns were not added yet.
+      if (error && /Could not find the 'resting_hr' column|Could not find the 'steps' column/i.test(error.message)) {
+        const payloadNoFitbitCols = { ...payloadBase };
+        delete payloadNoFitbitCols.steps;
+        delete payloadNoFitbitCols.resting_hr;
+
+        const retry = await state.supabase
+          .from('daily_logs')
+          .upsert(payloadNoFitbitCols, { onConflict: 'log_date' })
+          .select()
+          .single();
+        error = retry.error;
+
+        if (!error) {
+          showToast('Log saved (Fitbit columns missing in DB). Run SQL update to enable steps/resting HR saving.');
+        }
+      }
 
       if (error) {
         showToast(`Log save failed: ${error.message}`);
@@ -3654,6 +3696,7 @@ with check (true);`;
       // Handle Fitbit OAuth callback before anything else
       const fitbitConnected = await handleFitbitCallback();
       if (fitbitConnected) showToast('Fitbit connected!');
+      if (fitbitConnected || isFitbitConnected()) startFitbitAutoSync();
 
       if (forceSetup) {
         localStorage.removeItem(FORCE_SETUP_KEY);
