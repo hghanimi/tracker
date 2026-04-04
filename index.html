@@ -934,6 +934,17 @@
           <div id="schedule-task-list" class="task-list"></div>
         </div>
 
+        <div id="compliance-panel" class="panel">
+          <div class="section-head">
+            <h2>Daily Compliance</h2>
+            <span id="compliance-score" class="phase-badge">-</span>
+          </div>
+          <p id="compliance-summary" class="muted" style="font-size:0.8rem;margin-bottom:10px;">
+            Live weighted score. End-of-day value is your final compliance for today.
+          </p>
+          <div id="compliance-breakdown" class="mono muted" style="font-size:0.74rem;line-height:1.55;"></div>
+        </div>
+
         <div id="supps-panel" class="panel">
           <div class="section-head">
             <h2>Supplements</h2>
@@ -1520,6 +1531,10 @@ with check (true);`;
       schedulePanel: document.getElementById('schedule-panel'),
       scheduleProgress: document.getElementById('schedule-progress'),
       scheduleTaskList: document.getElementById('schedule-task-list'),
+      compliancePanel: document.getElementById('compliance-panel'),
+      complianceScore: document.getElementById('compliance-score'),
+      complianceSummary: document.getElementById('compliance-summary'),
+      complianceBreakdown: document.getElementById('compliance-breakdown'),
       suppsPanel: document.getElementById('supps-panel'),
       supplementList: document.getElementById('supplement-list'),
       supplementCount: document.getElementById('supplement-count'),
@@ -1915,7 +1930,6 @@ with check (true);`;
     function getSupplements(meta) {
       const supplements = [
         { name: 'NAC 600mg — Morning' },
-        { name: 'NAC 600mg — Night' },
         { name: 'Omega-3 2g — Morning' },
         { name: 'Omega-3 2g — Night' },
       ];
@@ -1925,8 +1939,7 @@ with check (true);`;
           { name: 'Winstrol 20mg — Morning' },
           { name: 'Winstrol 10mg — Midday' },
           { name: 'Winstrol 20mg — Night' },
-          { name: 'Liver Support 500mg' },
-          { name: 'Taurine 3g' },
+          { name: 'Liver Support 500mg — Night' },
           { name: 'CoQ10 200mg' },
         );
       }
@@ -1996,7 +2009,7 @@ with check (true);`;
       const todayWorkout = workoutNames[dow] || null;
 
       const amSupps = ['NAC 600mg — Morning', 'Omega-3 2g — Morning'];
-      if (isWinstrol) amSupps.push('Winstrol 20mg — Morning', 'Liver Support 500mg', 'Taurine 1.5g', 'CoQ10 200mg');
+      if (isWinstrol) amSupps.push('Winstrol 20mg — Morning', 'CoQ10 200mg');
       if (week >= 5 && week <= 12) amSupps.push('CoQ10 200mg');
       if (week >= 3 && week <= 12) amSupps.push('Aromasin 12.5mg');
       if (week >= 13 && week <= 14 && (meta.cappedDay - 85) % 2 === 0) amSupps.push('Aromasin 12.5mg');
@@ -2008,8 +2021,8 @@ with check (true);`;
       const midSupps = [];
       if (isWinstrol) midSupps.push('Winstrol 10mg — Midday');
 
-      const pmSupps = ['NAC 600mg — Night', 'Omega-3 2g — Night'];
-      if (isWinstrol) pmSupps.push('Winstrol 20mg — Night', 'Taurine 1.5g');
+      const pmSupps = ['Omega-3 2g — Night'];
+      if (isWinstrol) pmSupps.push('Winstrol 20mg — Night', 'Liver Support 500mg — Night');
       if (isPCT) {
         pmSupps.push(week <= 16 ? 'Nolvadex 20mg' : 'Nolvadex 10mg');
         pmSupps.push(week <= 16 ? 'Clomid 25mg' : 'Clomid 12.5mg');
@@ -2048,6 +2061,67 @@ with check (true);`;
       tasks.push({ time: '22:00', name: 'Casein shake + wind down', detail: '2 scoops casein before bed \u2013 aim for 7\u20138 hrs sleep', mode: 'manual', completed: state.todayTasks.get('Casein shake + wind down') === true });
 
       return tasks;
+    }
+
+    function calculateComplianceScore(meta, date = new Date()) {
+      const dow = date.getDay();
+      const workoutNames = { 0: 'Pull B', 3: 'Push A', 4: 'Pull B', 6: 'Push A', 1: 'Legs C' };
+      const plannedWorkout = workoutNames[dow] || null;
+      const plannedInjection = [1, 4].includes(dow) && meta.week <= 12;
+
+      const supplements = getSupplements(meta).map((s) => s.name);
+      const supplementTaken = supplements.filter((name) => state.todaySupplements.get(name) === true).length;
+      const supplementPct = supplements.length ? (supplementTaken / supplements.length) * 100 : null;
+
+      const winnySupps = supplements.filter((name) => name.includes('Winstrol'));
+      const winnyTaken = winnySupps.filter((name) => state.todaySupplements.get(name) === true).length;
+      const winnyPct = winnySupps.length ? (winnyTaken / winnySupps.length) * 100 : null;
+
+      const tasks = getDailySchedule(meta, date);
+      const taskDone = tasks.filter((t) => state.todayTasks.get(t.name) === true).length;
+      const taskPct = tasks.length ? (taskDone / tasks.length) * 100 : 0;
+
+      const injectionPct = plannedInjection ? (state.todayInjectionCount > 0 ? 100 : 0) : null;
+      const workoutPct = plannedWorkout ? (state.todayWorkoutCount > 0 ? 100 : 0) : null;
+
+      const components = [
+        { key: 'injection', label: 'Injection', weight: 30, pct: injectionPct },
+        { key: 'winny', label: 'Winstrol Doses', weight: 20, pct: winnyPct },
+        { key: 'workout', label: 'Workout', weight: 25, pct: workoutPct },
+        { key: 'supplements', label: 'Supplements', weight: 15, pct: supplementPct },
+        { key: 'schedule', label: 'Schedule Tasks', weight: 10, pct: taskPct },
+      ];
+
+      const active = components.filter((c) => c.pct != null);
+      const weightTotal = active.reduce((sum, c) => sum + c.weight, 0) || 1;
+      const weighted = active.reduce((sum, c) => sum + (c.pct * c.weight), 0) / weightTotal;
+
+      return {
+        total: Math.round(weighted),
+        components,
+        activeWeight: weightTotal,
+      };
+    }
+
+    function renderComplianceScore(meta, date = new Date()) {
+      if (!els.complianceScore || !els.complianceBreakdown) return;
+      const result = calculateComplianceScore(meta, date);
+      const total = result.total;
+      const badge = `${total}/100`;
+      els.complianceScore.textContent = badge;
+
+      let tone = 'var(--muted)';
+      if (total >= 90) tone = '#22c55e';
+      else if (total >= 75) tone = '#f59e0b';
+      else tone = '#ef4444';
+      els.complianceScore.style.color = tone;
+      els.complianceScore.style.background = 'rgba(255,255,255,0.04)';
+
+      const lines = result.components.map((c) => {
+        if (c.pct == null) return `• ${c.label}: N/A`;
+        return `• ${c.label}: ${Math.round(c.pct)}% (w:${c.weight})`;
+      });
+      els.complianceBreakdown.innerHTML = lines.join('<br>');
     }
 
     function showToast(message) {
@@ -2587,6 +2661,8 @@ with check (true);`;
         button.addEventListener('click', () => toggleTask(task.name, task.time, !task.completed, button));
         els.scheduleTaskList.appendChild(button);
       });
+
+      renderComplianceScore(meta, now);
 
       // Supplements
       const supplements = getSupplements(meta);
@@ -3472,6 +3548,14 @@ with check (true);`;
       } else {
         lines.push('No supplement data.');
       }
+
+      // ── Daily compliance score ──
+      sep('DAILY COMPLIANCE SCORE');
+      const compliance = calculateComplianceScore(meta, new Date());
+      lines.push(`Total: ${compliance.total}/100`);
+      compliance.components.forEach((c) => {
+        lines.push(`- ${c.label}: ${c.pct == null ? 'N/A' : `${Math.round(c.pct)}%`} (weight ${c.weight})`);
+      });
 
       lines.push('');
       lines.push('─'.repeat(40));
