@@ -325,6 +325,30 @@
     }
     .exercise-card:last-child { margin-bottom: 0; }
     .exercise-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 10px; }
+    .exercise-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+    .exercise-gif-link {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      color: var(--accent);
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      border-radius: 999px;
+      padding: 2px 7px;
+      flex-shrink: 0;
+      line-height: 1.2;
+    }
+    .exercise-gif-link:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
     .exercise-sets { display: flex; flex-direction: column; gap: 6px; }
     .set-row {
       display: flex;
@@ -1365,6 +1389,11 @@
     const SHOULDER_AVOID = [
       'Avoid: behind-neck press, behind-neck pulldown, upright rows, dips, and wide-grip bench while pain persists.',
     ];
+
+    function getExerciseGifSearchUrl(exerciseName) {
+      const q = encodeURIComponent(`${exerciseName} exercise form gif`);
+      return `https://www.google.com/search?tbm=isch&tbs=itp:animated&q=${q}`;
+    }
 
     const SQL_SNIPPET = `create extension if not exists pgcrypto;
 
@@ -2816,6 +2845,7 @@ with check (true);`;
 
       exercises.forEach((ex, i) => {
         const unit = state.exerciseUnits[i] || 'kg';
+        const gifUrl = getExerciseGifSearchUrl(ex.name);
         const card = document.createElement('div');
         card.className = 'exercise-card';
 
@@ -2853,7 +2883,10 @@ with check (true);`;
 
         card.innerHTML = `
           <div class="exercise-header">
-            <div class="exercise-name">${i + 1}. ${ex.name}</div>
+            <div class="exercise-name-row">
+              <div class="exercise-name">${i + 1}. ${ex.name}</div>
+              <a class="exercise-gif-link" href="${gifUrl}" target="_blank" rel="noopener noreferrer">GIF</a>
+            </div>
             <div class="unit-toggle">
               <button type="button" class="unit-btn${unit === 'kg' ? ' active' : ''}" data-unit="kg">kg</button>
               <button type="button" class="unit-btn${unit === 'lb' ? ' active' : ''}" data-unit="lb">lb</button>
