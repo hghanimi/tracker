@@ -979,6 +979,7 @@
             <span id="workout-session-badge" class="session-badge">-</span>
           </div>
           <p id="workout-session-note" class="muted" style="margin-bottom: 12px;"></p>
+          <div id="workout-shoulder-guide" class="muted" style="font-size:0.8rem;line-height:1.55;margin-bottom:12px;background:#181818;border:1px solid var(--border);border-radius:12px;padding:10px 12px;"></div>
           <div id="workout-exercise-list" class="task-list"></div>
         </div>
         <div id="workout-stats-panel" class="panel">
@@ -1136,6 +1137,18 @@
           <h2 style="margin-bottom: 10px;">Strength Progress</h2>
           <select id="exercise-selector" class="exercise-selector">
             <option value="">— Select exercise —</option>
+            <option value="Dumbbell Bench Press">Dumbbell Bench Press</option>
+            <option value="Landmine Press / Seated Arnold (to eye level)">Landmine Press / Seated Arnold (to eye level)</option>
+            <option value="Low Incline Dumbbell Press (15-20°)">Low Incline Dumbbell Press (15-20°)</option>
+            <option value="Cable Lateral Raise (controlled)">Cable Lateral Raise (controlled)</option>
+            <option value="Band Pull-Aparts">Band Pull-Aparts</option>
+            <option value="Cable External Rotation">Cable External Rotation</option>
+            <option value="Cable Row">Cable Row</option>
+            <option value="Wide-Grip Lat Pulldown (to upper chest)">Wide-Grip Lat Pulldown (to upper chest)</option>
+            <option value="Side-Lying External Rotation">Side-Lying External Rotation</option>
+            <option value="Barbell Back Squat (low bar / safety bar)">Barbell Back Squat (low bar / safety bar)</option>
+            <option value="Walking Lunges (DB at sides)">Walking Lunges (DB at sides)</option>
+            <option value="Dead Bug">Dead Bug</option>
             <option value="Barbell Bench Press">Barbell Bench Press</option>
             <option value="Overhead Press">Overhead Press</option>
             <option value="Incline Dumbbell Press">Incline Dumbbell Press</option>
@@ -1299,27 +1312,59 @@
     };
     const WORKOUT_PLAN = {
       'Push A': [
-        { name: 'Barbell Bench Press', warmup: '1 × 12-15 light', sets: 4, reps: '8-10' },
-        { name: 'Overhead Press', warmup: '1 × 12-15 light', sets: 4, reps: '8-10' },
-        { name: 'Incline Dumbbell Press', warmup: '1 × 12-15 light', sets: 4, reps: '10-12' },
-        { name: 'Lateral Raises', warmup: null, sets: 4, reps: '12-15' },
+        { name: 'Face Pulls (warm-up priority)', warmup: null, sets: 3, reps: '15-20 (3s out / 2s in)' },
+        { name: 'Dumbbell Bench Press', warmup: '1 × 12-15 light', sets: 4, reps: '8-10' },
+        { name: 'Landmine Press / Seated Arnold (to eye level)', warmup: '1 × 12-15 light', sets: 3, reps: '8-10' },
+        { name: 'Low Incline Dumbbell Press (15-20°)', warmup: '1 × 12-15 light', sets: 3, reps: '10-12' },
+        { name: 'Cable Lateral Raise (controlled)', warmup: null, sets: 3, reps: '12-15' },
         { name: 'Tricep Pushdown', warmup: null, sets: 4, reps: '10-12' },
+        { name: 'Band Pull-Aparts', warmup: null, sets: 3, reps: '20' },
+        { name: 'Cable External Rotation', warmup: null, sets: 3, reps: '15 each side' },
       ],
       'Pull B': [
         { name: 'Deadlift', warmup: '1 × 8-10 light', sets: 4, reps: '5-8' },
-        { name: 'Barbell / Cable Row', warmup: '1 × 12-15 light', sets: 4, reps: '8-10' },
-        { name: 'Lat Pulldown / Pull-up', warmup: null, sets: 4, reps: '8-12' },
+        { name: 'Cable Row', warmup: '1 × 12-15 light', sets: 4, reps: '8-10' },
+        { name: 'Wide-Grip Lat Pulldown (to upper chest)', warmup: null, sets: 4, reps: '8-12' },
         { name: 'Face Pulls', warmup: null, sets: 4, reps: '15-20' },
         { name: 'Barbell / Dumbbell Curl', warmup: null, sets: 4, reps: '10-12' },
+        { name: 'Side-Lying External Rotation', warmup: null, sets: 3, reps: '15 each side' },
       ],
       'Legs C': [
-        { name: 'Barbell Back Squat', warmup: '1 × 10-12 light', sets: 4, reps: '6-8' },
+        { name: 'Barbell Back Squat (low bar / safety bar)', warmup: '1 × 10-12 light', sets: 4, reps: '6-8' },
         { name: 'Romanian Deadlift', warmup: '1 × 10-12 light', sets: 4, reps: '8-10' },
         { name: 'Leg Press', warmup: null, sets: 4, reps: '10-12' },
-        { name: 'Walking Lunges', warmup: null, sets: 4, reps: '12 each leg' },
-        { name: 'Plank', warmup: null, sets: 3, reps: '45-60s hold' },
+        { name: 'Walking Lunges (DB at sides)', warmup: null, sets: 4, reps: '12 each leg' },
+        { name: 'Dead Bug', warmup: null, sets: 3, reps: '10-12 each side' },
       ],
     };
+
+    const SHOULDER_SESSION_NOTES = {
+      'Push A': 'Shoulder-safe push: elbows 45-60°, stop presses at pain-free range, avoid lockout overhead.',
+      'Pull B': 'Shoulder-safe pull: keep rows cable-based, pulldown to upper chest, face pulls first and controlled.',
+      'Legs C': 'Leg day mostly unchanged: choose bar position that is pain-free and keep shoulder load minimal.',
+    };
+
+    const SHOULDER_GUIDE = {
+      'Push A': [
+        'Warm-up first: 2 min arm circles, 10 band pull-aparts, 10 external rotations each side.',
+        'DB bench depth: stop when upper arm is parallel to floor; avoid deep stretch if sharp pain appears.',
+        'Skip any pressing angle that gives sharp pain >3/10 and switch to pain-free range immediately.',
+      ],
+      'Pull B': [
+        'Prioritize face pulls early with strict tempo and lighter loads.',
+        'No behind-neck pulldowns and no upright rows.',
+        'Finish with side-lying external rotations for cuff stability.',
+      ],
+      'Legs C': [
+        'If shoulder hurts under back squat bar, switch to safety bar, goblet squat, or leg-press focus.',
+        'Use dumbbells at sides for lunges to avoid shoulder strain.',
+        'If forearm plank irritates shoulder, keep Dead Bug as default core work.',
+      ],
+    };
+
+    const SHOULDER_AVOID = [
+      'Avoid: behind-neck press, behind-neck pulldown, upright rows, dips, and wide-grip bench while pain persists.',
+    ];
 
     const SQL_SNIPPET = `create extension if not exists pgcrypto;
 
@@ -1516,6 +1561,7 @@ with check (true);`;
       workoutSessionTitle: document.getElementById('workout-session-title'),
       workoutSessionBadge: document.getElementById('workout-session-badge'),
       workoutSessionNote: document.getElementById('workout-session-note'),
+      workoutShoulderGuide: document.getElementById('workout-shoulder-guide'),
       workoutExerciseList: document.getElementById('workout-exercise-list'),
       tabButtons: Array.from(document.querySelectorAll('.tab-btn')),
       tabScreens: Array.from(document.querySelectorAll('.tab-screen')),
@@ -2719,8 +2765,13 @@ with check (true);`;
       els.workoutSessionPanel.classList.remove('hidden');
       statsPanel.classList.remove('hidden');
       els.workoutSessionTitle.textContent = session;
-      els.workoutSessionBadge.textContent = `5 exercises \u00b7 ${session.split(' ')[0]}`;
-      els.workoutSessionNote.textContent = '1-2 RIR per set \u00b7 500ml water \u00b7 ABE 15 min before';
+      els.workoutSessionBadge.textContent = `${exercises.length} exercises \u00b7 ${session.split(' ')[0]}`;
+      els.workoutSessionNote.textContent = SHOULDER_SESSION_NOTES[session] || '1-2 RIR per set \u00b7 500ml water \u00b7 ABE 15 min before';
+
+      if (els.workoutShoulderGuide) {
+        const guide = SHOULDER_GUIDE[session] || [];
+        els.workoutShoulderGuide.innerHTML = `<strong style="color:#f3f3f3;">Shoulder Protocol</strong><br>${[...guide, ...SHOULDER_AVOID].join('<br>')}`;
+      }
 
       // Auto-fill session in Log Stats form
       document.getElementById('wf-session-display').textContent = session;
