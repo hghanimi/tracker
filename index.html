@@ -3478,7 +3478,6 @@ with check (true);`;
       const payload = {
         workout_date: todayIso(),
         workout_name: name,
-        workout_time: form.workout_time.value || null,
         duration_minutes: sanitizeNumber(form.duration_minutes.value),
         performance_level: sanitizeNumber(form.performance_level.value),
         notes: form.notes.value.trim() || null,
