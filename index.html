@@ -1974,22 +1974,13 @@ with check (true);`;
         );
       }
 
-      if (meta.week >= 3 && meta.week <= 4) {
-        supplements.push({ name: 'Aromasin 12.5mg' });
-      }
-
       if (meta.week >= 5 && meta.week <= 12) {
-        supplements.push(
-          { name: 'Aromasin 12.5mg' },
-          { name: 'CoQ10 200mg' },
-        );
+        supplements.push({ name: 'CoQ10 200mg' });
       }
 
-      if (meta.week >= 13 && meta.week <= 14) {
-        const bridgeOffset = meta.cappedDay - 85;
-        if (bridgeOffset % 2 === 0) {
-          supplements.push({ name: 'Aromasin 12.5mg EOD' });
-        }
+      // Aromasin 12.5mg EOD — starts Day 11 (Apr 9) through end of bridge (week 14)
+      if (meta.cappedDay >= 11 && meta.week <= 14 && (meta.cappedDay - 11) % 2 === 0) {
+        supplements.push({ name: 'Aromasin 12.5mg EOD' });
       }
 
       if (meta.week >= 15 && meta.week <= 18) {
@@ -2041,8 +2032,8 @@ with check (true);`;
       const amSupps = ['NAC 600mg — Morning', 'Omega-3 2g — Morning'];
       if (isWinstrol) amSupps.push('Winstrol 20mg — Morning', 'CoQ10 200mg');
       if (week >= 5 && week <= 12) amSupps.push('CoQ10 200mg');
-      if (week >= 3 && week <= 12) amSupps.push('Aromasin 12.5mg');
-      if (week >= 13 && week <= 14 && (meta.cappedDay - 85) % 2 === 0) amSupps.push('Aromasin 12.5mg');
+      // Aromasin 12.5mg EOD — starts Day 11 (Apr 9) through end of bridge (week 14)
+      if (meta.cappedDay >= 11 && week <= 14 && (meta.cappedDay - 11) % 2 === 0) amSupps.push('Aromasin 12.5mg EOD');
       if (isPCT) {
         amSupps.push(week <= 16 ? 'Nolvadex 20mg' : 'Nolvadex 10mg');
         amSupps.push(week <= 16 ? 'Clomid 25mg' : 'Clomid 12.5mg');
