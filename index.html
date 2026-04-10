@@ -1943,6 +1943,111 @@ with check (true);`;
       return 'PCT \u00b7 Weeks 15\u201318';
     }
 
+    const LAB_TEST_SCHEDULE = [
+      {
+        date: '2026-04-10',
+        title: 'Lab Test 1 - Baseline',
+        priority: 'Critical',
+        tests: [
+          'CBC (Hematocrit, RBC, Hemoglobin)',
+          'ALT / AST / GGT',
+          'Total Cholesterol / HDL / LDL / Triglycerides',
+          'Estradiol (E2)',
+          'Prolactin',
+          'Blood Glucose',
+          'Blood Pressure',
+        ],
+      },
+      {
+        date: '2026-04-27',
+        title: 'Lab Test 2 - Mid-cycle check',
+        priority: 'Critical',
+        tests: [
+          'ALT / AST / GGT',
+          'Total Cholesterol / HDL / LDL',
+          'Triglycerides',
+          'Hematocrit / RBC',
+          'Estradiol (E2)',
+          'Prolactin',
+          'Blood Glucose',
+          'Blood Pressure',
+        ],
+      },
+      {
+        date: '2026-06-01',
+        title: 'Lab Test 3 - Peak cycle check',
+        priority: 'Critical',
+        tests: [
+          'Total Testosterone',
+          'Estradiol (E2)',
+          'Hematocrit / RBC / Hemoglobin',
+          'ALT / AST',
+          'Total Cholesterol / HDL / LDL',
+          'Triglycerides',
+          'Prolactin',
+          'Blood Pressure',
+          'Creatinine',
+          'PSA',
+        ],
+      },
+      {
+        date: '2026-07-19',
+        title: 'Lab Test 4 - End of cycle',
+        priority: 'Critical',
+        tests: [
+          'Total Testosterone / Free Testosterone',
+          'LH + FSH',
+          'Estradiol (E2)',
+          'Hematocrit / RBC',
+          'ALT / AST / GGT',
+          'Total Cholesterol / HDL / LDL',
+          'Triglycerides',
+          'Prolactin',
+          'Blood Pressure',
+          'Creatinine',
+          'PSA',
+          'Blood Glucose',
+        ],
+      },
+      {
+        date: '2026-08-10',
+        title: 'Lab Test 5 - PCT midpoint',
+        priority: 'Important',
+        tests: [
+          'Total Testosterone / Free Testosterone',
+          'LH + FSH',
+          'Estradiol (E2)',
+          'Prolactin',
+          'ALT / AST',
+          'HDL / LDL',
+          'Hematocrit',
+        ],
+      },
+      {
+        date: '2026-09-14',
+        title: 'Lab Test 6 - Post PCT recovery',
+        priority: 'Important',
+        tests: [
+          'Total Testosterone / Free Testosterone',
+          'LH + FSH',
+          'Estradiol (E2)',
+          'Prolactin',
+          'Total Cholesterol / HDL / LDL',
+          'Triglycerides',
+          'ALT / AST / GGT',
+          'Hematocrit / RBC',
+          'Blood Glucose',
+          'Creatinine',
+          'PSA',
+        ],
+      },
+    ];
+
+    function getLabTestEvent(date = new Date()) {
+      const dateIso = localDateStr(date);
+      return LAB_TEST_SCHEDULE.find((event) => event.date === dateIso) || null;
+    }
+
     function getInjectionSite(date = new Date()) {
       const weekday = date.getDay();
       if (![1, 4].includes(weekday)) return null;
@@ -2028,6 +2133,7 @@ with check (true);`;
       const workoutNames = { 0: 'Pull B', 3: 'Push A', 4: 'Pull B', 6: 'Push A', 1: 'Legs C' };
       const cardioMorning = [0, 2, 4].includes(dow);
       const todayWorkout = workoutNames[dow] || null;
+      const labEvent = getLabTestEvent(date);
 
       const amSupps = ['NAC 600mg — Morning', 'Omega-3 2g — Morning'];
       if (isWinstrol) amSupps.push('Winstrol 20mg — Morning', 'CoQ10 200mg');
@@ -2052,6 +2158,25 @@ with check (true);`;
       const tasks = [];
       tasks.push({ time: '07:00', name: 'Wake up & weigh in', detail: 'Step on scale, log weight and how you feel', mode: 'manual', completed: state.todayTasks.get('Wake up & weigh in') === true });
       tasks.push({ time: '07:30', name: 'Breakfast', detail: '2 tbsp protein peanut butter + 2 scoops whey with milk · ' + amSupps.join(', '), mode: 'manual', completed: state.todayTasks.get('Breakfast') === true });
+
+      if (labEvent) {
+        const labTaskName = `${labEvent.title}`;
+        const resultTaskName = `Log results - ${labEvent.title}`;
+        tasks.push({
+          time: '08:30',
+          name: labTaskName,
+          detail: `Priority: ${labEvent.priority}. Do labs today: ${labEvent.tests.join(', ')}`,
+          mode: 'manual',
+          completed: state.todayTasks.get(labTaskName) === true,
+        });
+        tasks.push({
+          time: '19:30',
+          name: resultTaskName,
+          detail: 'Record results in your log notes and share values for review.',
+          mode: 'manual',
+          completed: state.todayTasks.get(resultTaskName) === true,
+        });
+      }
 
       if (isInjDay) {
         const site = getInjectionSite(date) || 'assigned site';
