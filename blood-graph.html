@@ -100,6 +100,7 @@ const CLR = {
   test   : '#3b82f6',
   mast   : '#f5a623',
   winny  : '#ef4444',
+  labs   : '#a78bfa',
   today  : '#22c55e',
   bg     : '#0a0a0a',
   panel  : '#111111',
@@ -272,6 +273,19 @@ function buildData() {
 
 const hToDate  = h => new Date(CYCLE_START.getTime() + h * MS_H);
 const fmtFull  = h => hToDate(h).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const dateToHour = (isoDate) => (new Date(`${isoDate}T00:00:00`) - CYCLE_START) / MS_H;
+
+const LAB_TEST_MARKERS = [
+  { code: 'T1', date: '2026-04-10', name: 'Baseline' },
+  { code: 'T2', date: '2026-04-27', name: 'Mid-cycle' },
+  { code: 'T3', date: '2026-06-01', name: 'Peak cycle' },
+  { code: 'T4', date: '2026-07-19', name: 'End cycle' },
+  { code: 'T5', date: '2026-08-10', name: 'PCT midpoint' },
+  { code: 'T6', date: '2026-09-14', name: 'Post PCT' },
+].map((item) => ({
+  ...item,
+  h: dateToHour(item.date),
+}));
 
 // ─── CUSTOM X-AXIS TICK ───────────────────────────────────────────
 
@@ -501,6 +515,7 @@ function BloodSaturationGraph() {
   const phase1H = WINNY_DAYS * 24;       // 672 h
   const phase2H = CYCLE_WEEKS * 7 * 24; // 2016 h
   const graphH  = GRAPH_DAYS  * 24;     // 2664 h
+  const inRangeLabMarkers = LAB_TEST_MARKERS.filter((m) => m.h >= 0 && m.h <= graphH);
 
   // Days until both Test + Mast reach ≥95% saturation
   const ssDays = (() => {
@@ -646,6 +661,27 @@ function BloodSaturationGraph() {
               }}
             />
 
+            {/* Scheduled lab test markers */}
+            {inRangeLabMarkers.map((marker) => (
+              <ReferenceLine
+                key={`lab-${marker.code}`}
+                x={marker.h}
+                yAxisId="left"
+                stroke={CLR.labs}
+                strokeDasharray="3 4"
+                strokeWidth={1}
+                strokeOpacity={0.9}
+                label={{
+                  value: marker.code,
+                  position: 'insideTopLeft',
+                  fill: CLR.labs,
+                  fontSize: 8,
+                  fontFamily: 'Space Mono, monospace',
+                  opacity: 0.9,
+                }}
+              />
+            ))}
+
             {/* Today marker */}
             {todayH >= 0 && todayH <= graphH && (
               <ReferenceLine x={todaySnapH} yAxisId="left"
@@ -720,6 +756,8 @@ function BloodSaturationGraph() {
         <span>250 mg · Mon+Thu · 10d t½ · Bateman tLag=12h</span>
         <span style={{ color: CLR.winny }}>■ Winstrol</span>
         <span>50 mg/day oral · 17% bioavail · 9h t½ · 4 wks</span>
+        <span style={{ color: CLR.labs }}>¦ Lab markers</span>
+        <span>T1 Apr 10 · T2 Apr 27 · T3 Jun 1 · T4 Jul 19 (T5/T6 off-chart)</span>
       </div>
 
       {/* Footer */}
