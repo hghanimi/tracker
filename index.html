@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Cycle Tracker</title>
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#0f1c2f">
+  <meta name="theme-color" content="#2d241b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,17 +13,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #050a11;
-      --bg-elevated: #0b1422;
-      --panel: rgba(12, 19, 31, 0.86);
-      --panel-2: rgba(18, 28, 44, 0.88);
-      --border: #25364e;
-      --border-strong: #3c5f88;
-      --text: #e9f2ff;
-      --muted: #8ea4c2;
-      --accent: #50e3c2;
-      --accent-2: #79a8ff;
-      --accent-soft: rgba(80, 227, 194, 0.16);
+      --bg: #15100b;
+      --bg-elevated: #241b13;
+      --panel: rgba(34, 24, 16, 0.9);
+      --panel-2: rgba(45, 32, 21, 0.9);
+      --border: #6f543b;
+      --border-strong: #9f7d5c;
+      --text: #f9efe2;
+      --muted: #c8b49b;
+      --accent: #f0d2ae;
+      --accent-2: #deb889;
+      --accent-soft: rgba(240, 210, 174, 0.18);
       --danger: #ff6b6b;
       --shadow-soft: 0 18px 36px rgba(0, 0, 0, 0.34);
       --shadow-panel: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 24px 44px rgba(0, 0, 0, 0.38);
@@ -41,9 +41,9 @@
       color: var(--text);
       font-family: 'Plus Jakarta Sans', sans-serif;
       background:
-        radial-gradient(900px 520px at 12% -8%, rgba(121, 168, 255, 0.24), transparent 62%),
-        radial-gradient(820px 460px at 94% -16%, rgba(80, 227, 194, 0.2), transparent 64%),
-        linear-gradient(160deg, #050a11 0%, #07101b 55%, #060c14 100%);
+        radial-gradient(900px 520px at 12% -8%, rgba(222, 184, 135, 0.2), transparent 62%),
+        radial-gradient(820px 460px at 94% -16%, rgba(240, 210, 174, 0.18), transparent 64%),
+        linear-gradient(160deg, #15100b 0%, #20170f 55%, #120d09 100%);
     }
 
     body {
@@ -67,7 +67,7 @@
       height: min(80vw, 860px);
       top: -36vh;
       left: -22vw;
-      background: radial-gradient(circle, rgba(121, 168, 255, 0.18), rgba(121, 168, 255, 0));
+      background: radial-gradient(circle, rgba(222, 184, 135, 0.16), rgba(222, 184, 135, 0));
     }
 
     body::after {
@@ -75,7 +75,7 @@
       height: min(70vw, 760px);
       top: -26vh;
       right: -18vw;
-      background: radial-gradient(circle, rgba(80, 227, 194, 0.14), rgba(80, 227, 194, 0));
+      background: radial-gradient(circle, rgba(240, 210, 174, 0.14), rgba(240, 210, 174, 0));
     }
 
     button, input, select, textarea {
@@ -102,7 +102,7 @@
     }
 
     .panel {
-      background: linear-gradient(156deg, rgba(22, 33, 52, 0.9), rgba(12, 20, 33, 0.92));
+      background: linear-gradient(156deg, rgba(52, 38, 26, 0.9), rgba(31, 22, 15, 0.93));
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 16px;
@@ -201,7 +201,7 @@
     .inj-edit-row input:focus,
     .inj-edit-row select:focus {
       border-color: var(--accent-2);
-      box-shadow: 0 0 0 3px rgba(121, 168, 255, 0.18);
+      box-shadow: 0 0 0 3px rgba(222, 184, 135, 0.16);
     }
 
     .field input[disabled] {
@@ -224,7 +224,7 @@
     .btn {
       padding: 10px 15px;
       border-radius: 11px;
-      border: 1px solid #355072;
+      border: 1px solid #6f543b;
       background: linear-gradient(180deg, rgba(24, 36, 56, 0.98), rgba(14, 24, 38, 0.98));
       color: #d8e9ff;
       cursor: pointer;
@@ -243,7 +243,7 @@
     .btn:active { transform: translateY(0); }
 
     .btn-primary {
-      background: linear-gradient(125deg, #6cb0ff, #59e5c8);
+      background: linear-gradient(125deg, #efd6b4, #cfab82);
       color: #04101f;
       border-color: transparent;
       box-shadow: 0 10px 24px rgba(80, 227, 194, 0.24);
@@ -312,7 +312,7 @@
     .phase-badge {
       font-size: 0.7rem;
       color: #81ffe5;
-      background: rgba(80, 227, 194, 0.14);
+      background: rgba(240, 210, 174, 0.14);
       border: 1px solid rgba(80, 227, 194, 0.32);
       padding: 5px 10px;
       border-radius: 999px;
@@ -406,7 +406,7 @@
       padding: 2px 9px;
       border-radius: 999px;
       background: rgba(8, 15, 26, 0.72);
-      border: 1px solid #2f4767;
+      border: 1px solid #6a5039;
       color: #93acc9;
       font-family: 'JetBrains Mono', monospace;
     }
@@ -449,7 +449,7 @@
 
     .checkbox-card.is-checked {
       border-color: rgba(80, 227, 194, 0.5);
-      box-shadow: 0 0 0 1px rgba(80, 227, 194, 0.2) inset;
+      box-shadow: 0 0 0 1px rgba(240, 210, 174, 0.18) inset;
     }
 
     .checkbox-label { display: flex; flex-direction: column; gap: 2px; }
@@ -565,7 +565,7 @@
 
     .toast {
       background: rgba(8, 15, 25, 0.93);
-      border: 1px solid #355072;
+      border: 1px solid #6f543b;
       border-radius: 11px;
       padding: 10px 16px;
       font-size: 0.85rem;
@@ -623,7 +623,7 @@
 
     .sql-block {
       background: rgba(7, 13, 22, 0.86);
-      border: 1px solid #2f4767;
+      border: 1px solid #6a5039;
       border-radius: 13px;
       padding: 12px;
       font-size: 0.74rem;
@@ -640,7 +640,7 @@
       text-align: left;
       padding: 7px 8px;
       color: #a2bbd8;
-      border-bottom: 1px solid #2f4767;
+      border-bottom: 1px solid #6a5039;
       font-weight: 600;
       white-space: nowrap;
     }
@@ -652,7 +652,7 @@
       width: 36px;
       height: 36px;
       border-radius: 10px;
-      border: 1px solid #2f4767;
+      border: 1px solid #6a5039;
       background: rgba(10, 18, 30, 0.82);
       color: #c8def9;
       cursor: pointer;
@@ -666,7 +666,7 @@
     }
 
     .energy-btn.active {
-      background: linear-gradient(125deg, #6cb0ff, #59e5c8);
+      background: linear-gradient(125deg, #efd6b4, #cfab82);
       color: #04101f;
       border-color: transparent;
       font-weight: 700;
@@ -726,7 +726,7 @@
     }
 
     .set-check.checked {
-      background: linear-gradient(125deg, #6cb0ff, #59e5c8);
+      background: linear-gradient(125deg, #efd6b4, #cfab82);
       border-color: transparent;
       color: #04101f;
     }
@@ -794,7 +794,7 @@
     .rest-preset-btn {
       padding: 5px 11px;
       border-radius: 9px;
-      border: 1px solid #355072;
+      border: 1px solid #6f543b;
       background: rgba(12, 22, 36, 0.9);
       color: #95aecb;
       font-size: 0.74rem;
@@ -822,7 +822,7 @@
     .effect-btn {
       padding: 6px 12px;
       border-radius: 999px;
-      border: 1px solid #355072;
+      border: 1px solid #6f543b;
       background: rgba(8, 16, 27, 0.84);
       color: #9ab1cd;
       font-size: 0.78rem;
@@ -842,7 +842,7 @@
       display: flex;
       align-items: center;
       padding: 0 0 6px;
-      border-bottom: 1px solid #2f4767;
+      border-bottom: 1px solid #6a5039;
       margin-bottom: 4px;
     }
 
@@ -868,11 +868,11 @@
     .cycle-day { flex: 1; display: flex; align-items: center; justify-content: center; height: 30px; }
     .cycle-day-hdr { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; color: #94acc9; }
     .inj-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; }
-    .inj-dot.future { background: rgba(8, 15, 24, 0.85); border: 1.5px solid #355072; }
+    .inj-dot.future { background: rgba(8, 15, 24, 0.85); border: 1.5px solid #6f543b; }
     .inj-dot.injected { background: #2fae86; color: #001f19; }
     .inj-dot.missed { background: rgba(255, 107, 107, 0.22); border: 1.5px solid #ff6b6b; color: #ffd2d2; }
-    .inj-dot.today { background: transparent; border: 2px solid #78b4ff; color: #78b4ff; }
-    .today-pip { width: 5px; height: 5px; border-radius: 50%; background: #78b4ff; }
+    .inj-dot.today { background: transparent; border: 2px solid #deb889; color: #deb889; }
+    .today-pip { width: 5px; height: 5px; border-radius: 50%; background: #deb889; }
 
     .cycle-legend {
       display: flex;
@@ -880,7 +880,7 @@
       gap: 14px;
       margin-top: 10px;
       padding-top: 10px;
-      border-top: 1px solid #2f4767;
+      border-top: 1px solid #6a5039;
       flex-wrap: wrap;
     }
 
@@ -914,7 +914,7 @@
 
     .edit-inj-btn:hover {
       color: #bdf6e7;
-      background: rgba(80, 227, 194, 0.14);
+      background: rgba(240, 210, 174, 0.14);
     }
 
     .inj-edit-form {
@@ -922,7 +922,7 @@
       display: grid;
       gap: 8px;
       padding-top: 10px;
-      border-top: 1px solid #2f4767;
+      border-top: 1px solid #6a5039;
     }
 
     .inj-edit-row { display: flex; gap: 8px; }
@@ -963,7 +963,7 @@
 
     .report-modal-inner {
       background: linear-gradient(145deg, rgba(18, 30, 47, 0.95), rgba(10, 17, 28, 0.95));
-      border: 1px solid #355072;
+      border: 1px solid #6f543b;
       border-radius: 18px;
       display: flex;
       flex-direction: column;
@@ -980,7 +980,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 14px 16px;
-      border-bottom: 1px solid #355072;
+      border-bottom: 1px solid #6f543b;
       flex-shrink: 0;
     }
 
@@ -1036,7 +1036,7 @@
       flex-shrink: 0;
     }
 
-    .toggle-pill.on { background: linear-gradient(125deg, #6cb0ff, #59e5c8); }
+    .toggle-pill.on { background: linear-gradient(125deg, #efd6b4, #cfab82); }
 
     .toggle-pill::after {
       content: '';
@@ -1104,7 +1104,7 @@
     }
 
     .unit-btn.active {
-      background: rgba(80, 227, 194, 0.14);
+      background: rgba(240, 210, 174, 0.14);
       color: #9df3e0;
       border-color: rgba(80, 227, 194, 0.45);
       font-weight: 700;
@@ -1113,7 +1113,7 @@
     .session-display {
       padding: 12px 14px;
       border-radius: 12px;
-      border: 1px solid #355072;
+      border: 1px solid #6f543b;
       background: rgba(8, 14, 24, 0.88);
       color: #9df3e0;
       font-weight: 700;
@@ -1129,7 +1129,7 @@
 
     .fitbit-chip {
       background: rgba(9, 16, 26, 0.86);
-      border: 1px solid #2f4767;
+      border: 1px solid #6a5039;
       border-radius: 11px;
       padding: 8px 12px;
       display: flex;
@@ -1230,7 +1230,7 @@
     *::-webkit-scrollbar { width: 10px; height: 10px; }
     *::-webkit-scrollbar-track { background: rgba(8, 15, 25, 0.65); }
     *::-webkit-scrollbar-thumb {
-      background: linear-gradient(180deg, #40648f, #2f4a68);
+      background: linear-gradient(180deg, #9f7d5c, #73553c);
       border-radius: 999px;
       border: 2px solid rgba(8, 15, 25, 0.65);
     }
@@ -1239,7 +1239,7 @@
 <body>
   <div class="app-shell">
 
-    <!-- ── SETUP SCREEN ── -->
+    <!-- â”€â”€ SETUP SCREEN â”€â”€ -->
     <section id="setup-screen" class="screen hidden">
       <div class="panel">
         <div class="title-row">
@@ -1282,7 +1282,7 @@
       </div>
     </section>
 
-    <!-- ── APP SCREEN ── -->
+    <!-- â”€â”€ APP SCREEN â”€â”€ -->
     <section id="app-screen" class="screen hidden">
       <div class="panel">
         <div class="title-row">
@@ -1379,7 +1379,7 @@
         <div class="panel panel-tight">
           <div class="session-picker-row">
             <select id="manual-session-picker">
-              <option value="">— Pick session manually —</option>
+              <option value="">â€” Pick session manually â€”</option>
               <option value="Push A">Push A</option>
               <option value="Pull B">Pull B</option>
               <option value="Legs C">Legs C</option>
@@ -1421,7 +1421,7 @@
               <input id="wf-duration" name="duration_minutes" type="number" style="display:none;">
             </div>
             <div class="field">
-              <label for="wf-perf">Performance (1–10)</label>
+              <label for="wf-perf">Performance (1â€“10)</label>
               <input id="wf-perf" name="performance_level" type="number" min="1" max="10">
             </div>
             <div class="field">
@@ -1547,16 +1547,16 @@
         </div>
         <div class="panel">
           <h2 style="margin-bottom: 4px;">Daily Compliance Trend</h2>
-          <p class="muted" style="font-size:0.8rem;margin-bottom:12px;">Weighted daily compliance score (0-100) · last 30 days</p>
+          <p class="muted" style="font-size:0.8rem;margin-bottom:12px;">Weighted daily compliance score (0-100) Â· last 30 days</p>
           <canvas id="supp-chart" style="width:100%;height:160px;"></canvas>
         </div>
         <div class="panel">
           <h2 style="margin-bottom: 10px;">Strength Progress</h2>
           <select id="exercise-selector" class="exercise-selector">
-            <option value="">— Select exercise —</option>
+            <option value="">â€” Select exercise â€”</option>
             <option value="Dumbbell Bench Press">Dumbbell Bench Press</option>
             <option value="Landmine Press / Seated Arnold (to eye level)">Landmine Press / Seated Arnold (to eye level)</option>
-            <option value="Low Incline Dumbbell Press (15-20°)">Low Incline Dumbbell Press (15-20°)</option>
+            <option value="Low Incline Dumbbell Press (15-20Â°)">Low Incline Dumbbell Press (15-20Â°)</option>
             <option value="Cable Lateral Raise (controlled)">Cable Lateral Raise (controlled)</option>
             <option value="Band Pull-Aparts">Band Pull-Aparts</option>
             <option value="Cable External Rotation">Cable External Rotation</option>
@@ -1592,8 +1592,8 @@
                 <tr>
                   <th>Date</th>
                   <th>kg</th>
-                  <th>💧</th>
-                  <th>😴</th>
+                  <th>ðŸ’§</th>
+                  <th>ðŸ˜´</th>
                   <th>HR</th>
                 </tr>
               </thead>
@@ -1619,7 +1619,7 @@
             <h2>PT Report</h2>
             <div class="report-modal-actions">
               <button id="report-copy-btn" class="btn btn-primary" type="button">Copy</button>
-              <button class="report-close-btn" id="report-close-btn" type="button">✕</button>
+              <button class="report-close-btn" id="report-close-btn" type="button">âœ•</button>
             </div>
           </div>
           <div class="report-body">
@@ -1666,7 +1666,7 @@
               <label for="fitbit-client-secret">Client Secret</label>
               <input id="fitbit-client-secret" type="password" placeholder="Paste client secret" autocomplete="off" spellcheck="false">
               <p class="muted" style="font-size:0.75rem;margin-top:6px;">
-                From <strong>dev.fitbit.com</strong> → your app → OAuth 2.0 Client ID &amp; Secret.<br>
+                From <strong>dev.fitbit.com</strong> â†’ your app â†’ OAuth 2.0 Client ID &amp; Secret.<br>
                 Redirect URI must be set to this page's URL.
               </p>
             </div>
@@ -1730,25 +1730,25 @@
     const WORKOUT_PLAN = {
       'Push A': [
         { name: 'Face Pulls (warm-up priority)', warmup: null, sets: 3, reps: '15-20 (3s out / 2s in)' },
-        { name: 'Dumbbell Bench Press', warmup: '1 × 12-15 light', sets: 4, reps: '8-10' },
-        { name: 'Landmine Press / Seated Arnold (to eye level)', warmup: '1 × 12-15 light', sets: 3, reps: '8-10' },
-        { name: 'Low Incline Dumbbell Press (15-20°)', warmup: '1 × 12-15 light', sets: 3, reps: '10-12' },
+        { name: 'Dumbbell Bench Press', warmup: '1 Ã— 12-15 light', sets: 4, reps: '8-10' },
+        { name: 'Landmine Press / Seated Arnold (to eye level)', warmup: '1 Ã— 12-15 light', sets: 3, reps: '8-10' },
+        { name: 'Low Incline Dumbbell Press (15-20Â°)', warmup: '1 Ã— 12-15 light', sets: 3, reps: '10-12' },
         { name: 'Cable Lateral Raise (controlled)', warmup: null, sets: 3, reps: '12-15' },
         { name: 'Tricep Pushdown', warmup: null, sets: 4, reps: '10-12' },
         { name: 'Band Pull-Aparts', warmup: null, sets: 3, reps: '20' },
         { name: 'Cable External Rotation', warmup: null, sets: 3, reps: '15 each side' },
       ],
       'Pull B': [
-        { name: 'Deadlift', warmup: '1 × 8-10 light', sets: 4, reps: '5-8' },
-        { name: 'Cable Row', warmup: '1 × 12-15 light', sets: 4, reps: '8-10' },
+        { name: 'Deadlift', warmup: '1 Ã— 8-10 light', sets: 4, reps: '5-8' },
+        { name: 'Cable Row', warmup: '1 Ã— 12-15 light', sets: 4, reps: '8-10' },
         { name: 'Wide-Grip Lat Pulldown (to upper chest)', warmup: null, sets: 4, reps: '8-12' },
         { name: 'Face Pulls', warmup: null, sets: 4, reps: '15-20' },
         { name: 'Barbell / Dumbbell Curl', warmup: null, sets: 4, reps: '10-12' },
         { name: 'Side-Lying External Rotation', warmup: null, sets: 3, reps: '15 each side' },
       ],
       'Legs C': [
-        { name: 'Barbell Back Squat (low bar / safety bar)', warmup: '1 × 10-12 light', sets: 4, reps: '6-8' },
-        { name: 'Romanian Deadlift', warmup: '1 × 10-12 light', sets: 4, reps: '8-10' },
+        { name: 'Barbell Back Squat (low bar / safety bar)', warmup: '1 Ã— 10-12 light', sets: 4, reps: '6-8' },
+        { name: 'Romanian Deadlift', warmup: '1 Ã— 10-12 light', sets: 4, reps: '8-10' },
         { name: 'Leg Press', warmup: null, sets: 4, reps: '10-12' },
         { name: 'Walking Lunges (DB at sides)', warmup: null, sets: 4, reps: '12 each leg' },
         { name: 'Dead Bug', warmup: null, sets: 3, reps: '10-12 each side' },
@@ -1756,7 +1756,7 @@
     };
 
     const SHOULDER_SESSION_NOTES = {
-      'Push A': 'Shoulder-safe push: elbows 45-60°, stop presses at pain-free range, avoid lockout overhead.',
+      'Push A': 'Shoulder-safe push: elbows 45-60Â°, stop presses at pain-free range, avoid lockout overhead.',
       'Pull B': 'Shoulder-safe pull: keep rows cable-based, pulldown to upper chest, face pulls first and controlled.',
       'Legs C': 'Leg day mostly unchanged: choose bar position that is pain-free and keep shoulder load minimal.',
     };
@@ -2022,7 +2022,7 @@ with check (true);`;
       });
     }
 
-    // ── FITBIT ────────────────────────────────────────────────────────────────
+    // â”€â”€ FITBIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const FITBIT_TOKEN_KEY = 'fitbit-token';
     const FITBIT_PKCE_KEY  = 'fitbit-pkce';
     const FITBIT_AUTH_URL  = 'https://www.fitbit.com/oauth2/authorize';
@@ -2106,7 +2106,7 @@ with check (true);`;
 
       const { verifier, redirectUri, clientId } = JSON.parse(stored);
       const effectiveClientId = clientId || state.config?.fitbitClientId;
-      if (!effectiveClientId) { showToast('Fitbit client ID missing — re-enter in Settings'); return false; }
+      if (!effectiveClientId) { showToast('Fitbit client ID missing â€” re-enter in Settings'); return false; }
 
       try {
         const body = new URLSearchParams({
@@ -2140,14 +2140,14 @@ with check (true);`;
 
     async function fitbitGet(path) {
       const token = getFitbitToken();
-      if (!token) throw new Error('Not connected — reconnect in Settings');
+      if (!token) throw new Error('Not connected â€” reconnect in Settings');
       const response = await fetch(`${FITBIT_API_BASE}${path}`, {
         headers: { Authorization: `Bearer ${token.access_token}` },
       });
       if (response.status === 401) {
         clearFitbitToken();
         renderFitbitUI();
-        throw new Error('Session expired — reconnect Fitbit in Settings');
+        throw new Error('Session expired â€” reconnect Fitbit in Settings');
       }
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
@@ -2163,12 +2163,12 @@ with check (true);`;
       const chipsEl = document.getElementById('fitbit-chips');
       if (!btn) return;
       btn.disabled = true;
-      if (!silent) btn.textContent = 'Syncing…';
-      if (statusEl && !silent) statusEl.textContent = 'Fetching from Fitbit…';
+      if (!silent) btn.textContent = 'Syncingâ€¦';
+      if (statusEl && !silent) statusEl.textContent = 'Fetching from Fitbitâ€¦';
       if (chipsEl) chipsEl.classList.add('hidden');
 
       const date = todayIso();
-      // yesterday's ISO date (for sleep — Fitbit logs last night's sleep on yesterday)
+      // yesterday's ISO date (for sleep â€” Fitbit logs last night's sleep on yesterday)
       const yesterday = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); })();
 
       try {
@@ -2235,14 +2235,14 @@ with check (true);`;
           if (avg != null) chips.push({ label: 'SpO2', value: `${avg.toFixed(1)}%` });
         }
 
-        // HRV (RMSSD — recovery indicator, very useful on cycle)
+        // HRV (RMSSD â€” recovery indicator, very useful on cycle)
         if (hrvRes.status === 'fulfilled') {
           const rmssd = hrvRes.value?.hrv?.[0]?.value?.dailyRmssd ?? hrvRes.value?.hrv?.[0]?.value?.rmssd;
           if (rmssd != null) chips.push({ label: 'HRV', value: `${Math.round(rmssd)} ms` });
         }
 
         if (!chips.length) {
-          if (statusEl && !silent) statusEl.textContent = 'No data yet — open your Fitbit app to sync your device first, then try again.';
+          if (statusEl && !silent) statusEl.textContent = 'No data yet â€” open your Fitbit app to sync your device first, then try again.';
           return;
         }
 
@@ -2255,7 +2255,7 @@ with check (true);`;
           chipsEl.innerHTML = chips.map((c) => `<div class="fitbit-chip"><span class="fitbit-chip-label">${c.label}</span><span>${c.value}</span></div>`).join('');
           chipsEl.classList.remove('hidden');
         }
-        if (statusEl && !silent) statusEl.textContent = `${chips.length} metric${chips.length !== 1 ? 's' : ''} synced · review then Save Log`;
+        if (statusEl && !silent) statusEl.textContent = `${chips.length} metric${chips.length !== 1 ? 's' : ''} synced Â· review then Save Log`;
         if (!silent) showToast(`Fitbit: ${chips.length} metrics synced`);
       } catch (err) {
         if (statusEl && !silent) statusEl.textContent = `Sync failed: ${err.message}`;
@@ -2314,7 +2314,7 @@ with check (true);`;
       if (connected) startFitbitAutoSync();
       else stopFitbitAutoSync();
     }
-    // ── END FITBIT ────────────────────────────────────────────────────────────
+    // â”€â”€ END FITBIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     function todayIso() {
       return new Date().toISOString().slice(0, 10);
@@ -2481,17 +2481,17 @@ with check (true);`;
 
     function getSupplements(meta) {
       const supplements = [
-        { name: 'NAC 600mg — Morning' },
-        { name: 'Omega-3 2g — Morning' },
-        { name: 'Omega-3 2g — Night' },
+        { name: 'NAC 600mg â€” Morning' },
+        { name: 'Omega-3 2g â€” Morning' },
+        { name: 'Omega-3 2g â€” Night' },
       ];
 
       if (meta.week >= 1 && meta.week <= 4) {
         supplements.push(
-          { name: 'Winstrol 20mg — Morning' },
-          { name: 'Winstrol 10mg — Midday' },
-          { name: 'Winstrol 20mg — Night' },
-          { name: 'Liver Support 500mg — Night' },
+          { name: 'Winstrol 20mg â€” Morning' },
+          { name: 'Winstrol 10mg â€” Midday' },
+          { name: 'Winstrol 20mg â€” Night' },
+          { name: 'Liver Support 500mg â€” Night' },
           { name: 'CoQ10 200mg' },
         );
       }
@@ -2500,7 +2500,7 @@ with check (true);`;
         supplements.push({ name: 'CoQ10 200mg' });
       }
 
-      // Aromasin 12.5mg EOD — starts Day 11 (Apr 9) through end of bridge (week 14)
+      // Aromasin 12.5mg EOD â€” starts Day 11 (Apr 9) through end of bridge (week 14)
       if (meta.cappedDay >= 11 && meta.week <= 14 && (meta.cappedDay - 11) % 2 === 0) {
         supplements.push({ name: 'Aromasin 12.5mg EOD' });
       }
@@ -2552,10 +2552,10 @@ with check (true);`;
       const todayWorkout = workoutNames[dow] || null;
       const labEvent = getLabTestEvent(date);
 
-      const amSupps = ['NAC 600mg — Morning', 'Omega-3 2g — Morning'];
-      if (isWinstrol) amSupps.push('Winstrol 20mg — Morning', 'CoQ10 200mg');
+      const amSupps = ['NAC 600mg â€” Morning', 'Omega-3 2g â€” Morning'];
+      if (isWinstrol) amSupps.push('Winstrol 20mg â€” Morning', 'CoQ10 200mg');
       if (week >= 5 && week <= 12) amSupps.push('CoQ10 200mg');
-      // Aromasin 12.5mg EOD — starts Day 11 (Apr 9) through end of bridge (week 14)
+      // Aromasin 12.5mg EOD â€” starts Day 11 (Apr 9) through end of bridge (week 14)
       if (meta.cappedDay >= 11 && week <= 14 && (meta.cappedDay - 11) % 2 === 0) amSupps.push('Aromasin 12.5mg EOD');
       if (isPCT) {
         amSupps.push(week <= 16 ? 'Nolvadex 20mg' : 'Nolvadex 10mg');
@@ -2563,10 +2563,10 @@ with check (true);`;
       }
 
       const midSupps = [];
-      if (isWinstrol) midSupps.push('Winstrol 10mg — Midday');
+      if (isWinstrol) midSupps.push('Winstrol 10mg â€” Midday');
 
-      const pmSupps = ['Omega-3 2g — Night'];
-      if (isWinstrol) pmSupps.push('Winstrol 20mg — Night', 'Liver Support 500mg — Night');
+      const pmSupps = ['Omega-3 2g â€” Night'];
+      if (isWinstrol) pmSupps.push('Winstrol 20mg â€” Night', 'Liver Support 500mg â€” Night');
       if (isPCT) {
         pmSupps.push(week <= 16 ? 'Nolvadex 20mg' : 'Nolvadex 10mg');
         pmSupps.push(week <= 16 ? 'Clomid 25mg' : 'Clomid 12.5mg');
@@ -2574,7 +2574,7 @@ with check (true);`;
 
       const tasks = [];
       tasks.push({ time: '07:00', name: 'Wake up & weigh in', detail: 'Step on scale, log weight and how you feel', mode: 'manual', completed: state.todayTasks.get('Wake up & weigh in') === true });
-      tasks.push({ time: '07:30', name: 'Breakfast', detail: '2 tbsp protein peanut butter + 2 scoops whey with milk · ' + amSupps.join(', '), mode: 'manual', completed: state.todayTasks.get('Breakfast') === true });
+      tasks.push({ time: '07:30', name: 'Breakfast', detail: '2 tbsp protein peanut butter + 2 scoops whey with milk Â· ' + amSupps.join(', '), mode: 'manual', completed: state.todayTasks.get('Breakfast') === true });
 
       if (labEvent) {
         const labTaskName = `${labEvent.title}`;
@@ -2620,7 +2620,7 @@ with check (true);`;
         tasks.push({ time: '18:00', name: todayWorkout + ' session', detail: 'Open Train tab for exercises \u2013 log when done', mode: 'manual', completed: state.todayTasks.get(todayWorkout + ' session') === true });
       }
 
-      tasks.push({ time: '20:00', name: 'Meal 2 + PM supplements', detail: (todayWorkout ? 'Post-workout: high protein, replenish glycogen · ' : 'Dinner \u2013 hit your targets · ') + pmSupps.join(', '), mode: 'manual', completed: state.todayTasks.get('Meal 2 + PM supplements') === true });
+      tasks.push({ time: '20:00', name: 'Meal 2 + PM supplements', detail: (todayWorkout ? 'Post-workout: high protein, replenish glycogen Â· ' : 'Dinner \u2013 hit your targets Â· ') + pmSupps.join(', '), mode: 'manual', completed: state.todayTasks.get('Meal 2 + PM supplements') === true });
       tasks.push({ time: '22:00', name: 'Casein shake + wind down', detail: '2 scoops casein before bed \u2013 aim for 7\u20138 hrs sleep', mode: 'manual', completed: state.todayTasks.get('Casein shake + wind down') === true });
 
       return tasks;
@@ -2711,8 +2711,8 @@ with check (true);`;
       els.complianceScore.style.background = 'rgba(255,255,255,0.04)';
 
       const lines = result.components.map((c) => {
-        if (c.pct == null) return `• ${c.label}: N/A`;
-        return `• ${c.label}: ${Math.round(c.pct)}% (w:${c.weight})`;
+        if (c.pct == null) return `â€¢ ${c.label}: N/A`;
+        return `â€¢ ${c.label}: ${Math.round(c.pct)}% (w:${c.weight})`;
       });
       els.complianceBreakdown.innerHTML = lines.join('<br>');
     }
@@ -2774,7 +2774,7 @@ with check (true);`;
       state.workoutTimer.startTime = null;
     }
 
-    // ── Nav badges ──────────────────────────────────────────────────────────
+    // â”€â”€ Nav badges â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function updateNavBadges() {
       const dow = new Date().getDay();
       const isWorkoutDay = [0, 1, 3, 4, 6].includes(dow);
@@ -2784,7 +2784,7 @@ with check (true);`;
       document.getElementById('badge-inject')?.classList.toggle('hidden', !(isInjDay && state.todayInjectionCount === 0));
     }
 
-    // ── Mark all supplements taken ──────────────────────────────────────────
+    // â”€â”€ Mark all supplements taken â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function markAllSupplements() {
       const meta = getCycleMeta();
       const supplements = getSupplements(meta);
@@ -2800,7 +2800,7 @@ with check (true);`;
       showToast('All supplements marked taken');
     }
 
-    // ── Auto-fill inject form ───────────────────────────────────────────────
+    // â”€â”€ Auto-fill inject form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function prefillInjectForm() {
       const form = els.injectionForm;
       if (!form) return;
@@ -2814,7 +2814,7 @@ with check (true);`;
       }
     }
 
-    // ── Rest timer ──────────────────────────────────────────────────────────
+    // â”€â”€ Rest timer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function showRestTimer() {
       const overlay = document.getElementById('rest-timer-overlay');
       if (!overlay) return;
@@ -2864,7 +2864,7 @@ with check (true);`;
       if (overlay) overlay.classList.add('hidden');
     }
 
-    // ── Compliance heatmap ──────────────────────────────────────────────────
+    // â”€â”€ Compliance heatmap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function renderComplianceHeatmap() {
       const container = document.getElementById('compliance-heatmap');
       if (!container) return;
@@ -2913,15 +2913,15 @@ with check (true);`;
             dot.className = 'inj-dot';
             if (injectedDates.has(cellStr)) {
               dot.classList.add('injected');
-              dot.textContent = '✓';
+              dot.textContent = 'âœ“';
             } else if (isFuture) {
               dot.classList.add('future');
             } else if (isToday) {
               dot.classList.add('today');
-              dot.textContent = '●';
+              dot.textContent = 'â—';
             } else {
               dot.classList.add('missed');
-              dot.textContent = '✕';
+              dot.textContent = 'âœ•';
             }
             dot.title = cellStr;
             dayCell.appendChild(dot);
@@ -2945,7 +2945,7 @@ with check (true);`;
       return `${y}-${m}-${d}`;
     }
 
-    // ── Per-exercise strength chart ─────────────────────────────────────────
+    // â”€â”€ Per-exercise strength chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async function renderStrengthChart(exerciseName) {
       const canvas = document.getElementById('strength-chart');
       const empty = document.getElementById('strength-chart-empty');
@@ -3041,7 +3041,7 @@ with check (true);`;
       ctx.fillText(`${maxW}kg`, L, 14);
     }
 
-    // ── Gym mode ────────────────────────────────────────────────────────────
+    // â”€â”€ Gym mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     function applyGymMode() {
       document.body.classList.toggle('gym-mode', state.gymMode);
       const btn = document.getElementById('gym-mode-toggle');
@@ -3126,7 +3126,7 @@ with check (true);`;
         return;
       }
 
-      // Cycle active or complete — show everything
+      // Cycle active or complete â€” show everything
       els.preCyclePanel.classList.add('hidden');
       els.statsPanel.classList.remove('hidden');
       els.phasePanel.classList.remove('hidden');
@@ -3359,7 +3359,7 @@ with check (true);`;
           const parts = prevSets.map((s, j) => {
             if (!s.weight && !s.reps) return null;
             const label = ex.warmup && j === 0 ? 'W' : `S${ex.warmup ? j : j + 1}`;
-            return `<span class="prev-session-label">${label}:</span> ${s.weight || '?'}kg×${s.reps || '?'}`;
+            return `<span class="prev-session-label">${label}:</span> ${s.weight || '?'}kgÃ—${s.reps || '?'}`;
           }).filter(Boolean);
           if (parts.length) prevHtml = `<div class="prev-session">Last: ${parts.join('  ')}</div>`;
         }
@@ -3371,7 +3371,7 @@ with check (true);`;
           const reps = (savedDetails?.[i]?.[0] && savedDetails[i][0].reps) || '';
           const key = `${i}_0`;
           const done = state.completedSets.get(key) || false;
-          setsHtml += `<div class="set-row${done ? ' is-done' : ''}" data-key="${key}"><span class="set-label">W</span><span class="set-row-inputs"><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> × <input type="text" placeholder="reps" style="width:60px" value="${reps}"></span><button type="button" class="set-check${done ? ' checked' : ''}">✓</button></div>`;
+          setsHtml += `<div class="set-row${done ? ' is-done' : ''}" data-key="${key}"><span class="set-label">W</span><span class="set-row-inputs"><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> Ã— <input type="text" placeholder="reps" style="width:60px" value="${reps}"></span><button type="button" class="set-check${done ? ' checked' : ''}">âœ“</button></div>`;
           setMeta.push({ key, label: 'W' });
         }
         for (let s = 1; s <= ex.sets; s++) {
@@ -3380,7 +3380,7 @@ with check (true);`;
           const reps = (savedDetails?.[i]?.[savedIdx] && savedDetails[i][savedIdx].reps) || '';
           const key = `${i}_${s}`;
           const done = state.completedSets.get(key) || false;
-          setsHtml += `<div class="set-row${done ? ' is-done' : ''}" data-key="${key}"><span class="set-label">S${s}</span><span class="set-row-inputs"><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> × <input type="text" placeholder="reps" style="width:60px" value="${reps}"></span><button type="button" class="set-check${done ? ' checked' : ''}">✓</button></div>`;
+          setsHtml += `<div class="set-row${done ? ' is-done' : ''}" data-key="${key}"><span class="set-label">S${s}</span><span class="set-row-inputs"><input type="number" min="0" step="0.5" placeholder="${unit}" style="width:80px" value="${val}"> Ã— <input type="text" placeholder="reps" style="width:60px" value="${reps}"></span><button type="button" class="set-check${done ? ' checked' : ''}">âœ“</button></div>`;
           setMeta.push({ key });
         }
 
@@ -3394,7 +3394,7 @@ with check (true);`;
           </div>
           ${prevHtml}
           <div class="exercise-sets">${setsHtml}</div>
-          <button type="button" class="mirror-btn">↓ Mirror first set to all</button>
+          <button type="button" class="mirror-btn">â†“ Mirror first set to all</button>
         `;
 
         // Per-exercise unit toggle
@@ -3428,7 +3428,7 @@ with check (true);`;
           });
         });
 
-        // Set completion checkmarks — tap to toggle, trigger rest timer on complete
+        // Set completion checkmarks â€” tap to toggle, trigger rest timer on complete
         card.querySelectorAll('.set-check').forEach((btn) => {
           btn.addEventListener('click', () => {
             const row = btn.closest('.set-row');
@@ -4094,19 +4094,19 @@ with check (true);`;
 
       const sep = (title) => {
         lines.push('');
-        lines.push(`${'─'.repeat(40)}`);
+        lines.push(`${'â”€'.repeat(40)}`);
         lines.push(`  ${title}`);
-        lines.push(`${'─'.repeat(40)}`);
+        lines.push(`${'â”€'.repeat(40)}`);
       };
 
-      // ── Header ──
-      lines.push(`CYCLE TRACKER — PT REPORT`);
+      // â”€â”€ Header â”€â”€
+      lines.push(`CYCLE TRACKER â€” PT REPORT`);
       lines.push(`Generated: ${new Date().toLocaleString()}`);
       lines.push(`Athlete:   ${name}`);
       lines.push(`Cycle:     Week ${meta.week}, Day ${meta.dayNumber} of 126`);
       lines.push(`Phase:     ${getPhase(meta.dayNumber)}`);
 
-      // ── Today's log ──
+      // â”€â”€ Today's log â”€â”€
       sep('TODAY\'S HEALTH LOG');
       const t = state.todayLog;
       if (t) {
@@ -4120,7 +4120,7 @@ with check (true);`;
         lines.push('No log for today yet.');
       }
 
-      // ── Recent daily logs (last 14 days) ──
+      // â”€â”€ Recent daily logs (last 14 days) â”€â”€
       sep('RECENT DAILY LOGS (last 14 days)');
       const recentDays = state.recentLogs.slice(0, 14);
       if (recentDays.length) {
@@ -4131,13 +4131,13 @@ with check (true);`;
           if (l.water_liters) parts.push(`water ${l.water_liters}L`);
           if (l.side_effects?.length) parts.push(`[${l.side_effects.join('+')}]`);
           lines.push(`${l.log_date}  ${parts.join('  ') || '(no metrics)'}`);
-          if (l.notes) lines.push(`  → ${l.notes}`);
+          if (l.notes) lines.push(`  â†’ ${l.notes}`);
         });
       } else {
         lines.push('No recent logs.');
       }
 
-      // ── Workouts ──
+      // â”€â”€ Workouts â”€â”€
       sep('RECENT WORKOUTS');
       if (state.recentWorkouts.length) {
         state.recentWorkouts.slice(0, 10).forEach((w) => {
@@ -4155,7 +4155,7 @@ with check (true);`;
                 .filter((s) => s.weight || s.reps)
                 .map((s, j) => {
                   const label = j === 0 && PLAN?.[Number(k)]?.warmup ? 'W' : `S${PLAN?.[Number(k)]?.warmup ? j : j + 1}`;
-                  return `${label}: ${s.weight || '?'}${s.unit || 'kg'}×${s.reps || '?'}`;
+                  return `${label}: ${s.weight || '?'}${s.unit || 'kg'}Ã—${s.reps || '?'}`;
                 }).join('  ');
               if (setSummary) lines.push(`  ${exName}: ${setSummary}`);
             });
@@ -4165,28 +4165,28 @@ with check (true);`;
         lines.push('No workouts logged yet.');
       }
 
-      // ── Injections ──
+      // â”€â”€ Injections â”€â”€
       sep('INJECTION LOG');
       if (state.recentInjections.length) {
         state.recentInjections.slice(0, 20).forEach((i) => {
           lines.push(`${i.injection_date}  ${i.compound}  ${i.dose_mg ?? '?'}mg  ${i.site || ''}`);
-          if (i.notes) lines.push(`  → ${i.notes}`);
+          if (i.notes) lines.push(`  â†’ ${i.notes}`);
         });
       } else {
         lines.push('No injections logged yet.');
       }
 
-      // ── Supplements (today) ──
+      // â”€â”€ Supplements (today) â”€â”€
       sep('SUPPLEMENTS TODAY');
       if (state.todaySupplements.size) {
         state.todaySupplements.forEach((taken, name) => {
-          lines.push(`${taken ? '✓' : '✗'}  ${name}`);
+          lines.push(`${taken ? 'âœ“' : 'âœ—'}  ${name}`);
         });
       } else {
         lines.push('No supplement data.');
       }
 
-      // ── Daily compliance score ──
+      // â”€â”€ Daily compliance score â”€â”€
       sep('DAILY COMPLIANCE SCORE');
       const compliance = calculateComplianceScore(meta, new Date());
       lines.push(`Total: ${compliance.total}/100`);
@@ -4195,7 +4195,7 @@ with check (true);`;
       });
 
       lines.push('');
-      lines.push('─'.repeat(40));
+      lines.push('â”€'.repeat(40));
       lines.push('End of report');
 
       const text = lines.join('\n');
@@ -4329,3 +4329,4 @@ with check (true);`;
   </script>
 </body>
 </html>
+
